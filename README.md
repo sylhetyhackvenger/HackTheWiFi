@@ -50,10 +50,6 @@ termux-setup-storage
 git clone https://github.com/sylhetyhackvenger/HackTheWiFi.git
 cd HackTheWiFi
 
-# Install Python dependencies
-pip install -r requirements.txt
-```
-
 For Linux (Kali/Ubuntu/Debian):
 
 ```bash
@@ -65,8 +61,7 @@ sudo apt install python3 python3-pip git wireless-tools wpa-supplicant pixiewps 
 git clone https://github.com/sylhetyhackvenger/HackTheWiFi
 cd HackTheWiFi
 
-# Install Python dependencies
-pip3 install -r requirements.txt
+
 ```
 
 🚀 Usage Examples
