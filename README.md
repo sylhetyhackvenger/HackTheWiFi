@@ -1,10 +1,4 @@
-🚀 HackTheWiFi - Ultimate WPS Security Assessment Tool
-
-https://img.shields.io/badge/Python-3.8+-blue.svg
-https://img.shields.io/badge/Termux-Compatible-brightgreen.svg
-https://img.shields.io/badge/License-MIT-red.svg
-https://img.shields.io/badge/PRs-welcome-brightgreen.svg
-
+🚀 HackTheWiFi 
 <div align="center">
   <img src="assets/banner1.png" alt="HackTheWiFi Banner" width="100%">
   <br>
